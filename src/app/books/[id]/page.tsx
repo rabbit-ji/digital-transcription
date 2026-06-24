@@ -14,6 +14,8 @@ interface Book {
   flower_season: string | null;
   flower_emoji: string | null;
   flower_reason: string | null;
+  first_sentence: string | null;
+  last_sentence: string | null;
   recorded_at: string | null;
 }
 
@@ -45,6 +47,10 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
   const [review, setReview] = useState("");
   const [savingReview, setSavingReview] = useState(false);
 
+  const [firstSentence, setFirstSentence] = useState("");
+  const [lastSentence, setLastSentence] = useState("");
+  const [savingSentences, setSavingSentences] = useState(false);
+
   const [recordedAt, setRecordedAt] = useState("");
   const [savingDate, setSavingDate] = useState(false);
 
@@ -66,6 +72,8 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
         setBook(data.book as Book);
         setPassages(data.passages as Passage[]);
         setReview(data.book.review ?? "");
+        setFirstSentence(data.book.first_sentence ?? "");
+        setLastSentence(data.book.last_sentence ?? "");
         setRecordedAt(data.book.recorded_at ? String(data.book.recorded_at).substring(0, 10) : "");
       })
       .catch(() => setError("책 정보를 불러오지 못했어요"))
@@ -85,6 +93,22 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
       if (res.ok) setBook(data.book as Book);
     } finally {
       setSavingDate(false);
+    }
+  }
+
+  async function saveSentences() {
+    setSavingSentences(true);
+    try {
+      const res = await fetch(`/api/books/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ first_sentence: firstSentence, last_sentence: lastSentence }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setBook(data.book as Book);
+    } finally {
+      setSavingSentences(false);
     }
   }
 
@@ -218,6 +242,40 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
           </button>
         </div>
         <p className="text-xs text-stone-400 mt-1">날짜를 바꾸면 해당 계절의 꽃으로 다시 지정돼요.</p>
+      </div>
+
+      {/* 첫 문장 / 마지막 문장 */}
+      <div>
+        <h2 className="text-sm font-medium text-stone-600 mb-3">📖 첫 문장 · 마지막 문장</h2>
+        <div className="space-y-3">
+          <div>
+            <p className="text-xs text-stone-400 mb-1">첫 문장</p>
+            <textarea
+              value={firstSentence}
+              onChange={(e) => setFirstSentence(e.target.value)}
+              placeholder="책의 첫 문장을 기록해두세요…"
+              rows={2}
+              className="w-full border border-stone-200 rounded-2xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-stone-300"
+            />
+          </div>
+          <div>
+            <p className="text-xs text-stone-400 mb-1">마지막 문장</p>
+            <textarea
+              value={lastSentence}
+              onChange={(e) => setLastSentence(e.target.value)}
+              placeholder="책의 마지막 문장을 기록해두세요…"
+              rows={2}
+              className="w-full border border-stone-200 rounded-2xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-stone-300"
+            />
+          </div>
+          <button
+            onClick={saveSentences}
+            disabled={savingSentences}
+            className="bg-stone-800 text-white px-4 py-2 rounded-xl text-sm disabled:opacity-50 hover:bg-stone-700 transition-colors"
+          >
+            {savingSentences ? "저장 중…" : "저장"}
+          </button>
+        </div>
       </div>
 
       {/* 소감 */}

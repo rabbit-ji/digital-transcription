@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS books (
   flower_season  TEXT,                 -- 봄/여름/가을/겨울
   flower_emoji   TEXT,
   flower_reason  TEXT,                 -- 왜 이 꽃인지(소감 연결)
+  first_sentence TEXT,                 -- 책의 첫 문장
+  last_sentence  TEXT,                 -- 책의 마지막 문장
   recorded_at    TEXT NOT NULL,        -- 필사 시작일(계절 판정 기준)
   created_at     TEXT NOT NULL,
   updated_at     TEXT NOT NULL

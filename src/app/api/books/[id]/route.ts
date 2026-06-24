@@ -65,7 +65,7 @@ export async function PATCH(req: Request, { params }: Params) {
     }
   }
 
-  const allowed = ["title", "author", "review", "recorded_at", "flower_name", "flower_meaning", "flower_season", "flower_emoji", "flower_reason"];
+  const allowed = ["title", "author", "review", "recorded_at", "flower_name", "flower_meaning", "flower_season", "flower_emoji", "flower_reason", "first_sentence", "last_sentence"];
   const updates: string[] = [];
   const args: InValue[] = [];
   for (const key of allowed) {

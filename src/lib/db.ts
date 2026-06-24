@@ -23,6 +23,14 @@ export function ensureSchema(): Promise<void> {
     _schemaReady = (async () => {
       const sql = readFileSync(join(process.cwd(), "db", "schema.sql"), "utf8");
       await db().executeMultiple(sql);
+      // 기존 DB에 신규 컬럼 마이그레이션 (이미 존재하면 무시)
+      const migrations = [
+        "ALTER TABLE books ADD COLUMN first_sentence TEXT",
+        "ALTER TABLE books ADD COLUMN last_sentence TEXT",
+      ];
+      for (const stmt of migrations) {
+        try { await db().execute(stmt); } catch { /* column already exists */ }
+      }
     })();
   }
   return _schemaReady;
