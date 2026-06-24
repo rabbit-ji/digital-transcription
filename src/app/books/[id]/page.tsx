@@ -169,7 +169,7 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
     <div className="max-w-2xl mx-auto p-4 sm:p-6 space-y-6">
       {/* 헤더 */}
       <div className="flex items-start gap-4">
-        <Link href="/books" className="text-stone-400 hover:text-stone-600 text-sm mt-1">←</Link>
+        <button onClick={() => router.back()} className="text-stone-400 hover:text-stone-600 text-sm mt-1 cursor-pointer">←</button>
         {book.cover_url ? (
           <img src={book.cover_url} alt="" className="w-16 h-22 object-cover rounded-lg shadow flex-shrink-0" />
         ) : (

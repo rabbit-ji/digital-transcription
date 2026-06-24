@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 interface NaverBook {
   title: string;
@@ -70,7 +69,7 @@ export default function NewBookPage() {
   return (
     <div className="max-w-lg mx-auto p-4 sm:p-6">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/books" className="text-stone-400 hover:text-stone-600 text-sm">←</Link>
+        <button onClick={() => router.back()} className="text-stone-400 hover:text-stone-600 text-sm cursor-pointer">←</button>
         <h1 className="text-2xl font-semibold text-stone-800">책 추가</h1>
       </div>
 

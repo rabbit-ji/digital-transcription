@@ -58,9 +58,17 @@ function DictionaryContent() {
 
   return (
     <div className="max-w-lg mx-auto p-4 sm:p-6 space-y-8">
-      <div className="pt-8">
-        <h1 className="text-2xl font-semibold text-stone-800">나만의 인용 사전</h1>
-        <p className="text-stone-400 text-sm mt-1">태그로 필사를 모아보세요</p>
+      <div className="flex items-center gap-2 sm:gap-3">
+        <button
+          onClick={() => router.back()}
+          className="text-xs text-stone-400 hover:text-stone-600 transition-colors flex-shrink-0 cursor-pointer"
+        >
+          ← 홈
+        </button>
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-semibold text-stone-800">나만의 인용 사전</h1>
+          <p className="text-stone-400 text-sm mt-0.5">태그로 필사를 모아보세요</p>
+        </div>
       </div>
 
       {tags.length === 0 ? (
@@ -121,9 +129,6 @@ function DictionaryContent() {
         </div>
       )}
 
-      <Link href="/" className="text-xs text-stone-400 hover:text-stone-600 transition-colors block text-center">
-        ← 홈으로
-      </Link>
     </div>
   );
 }
