@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import { db, ensureSchema } from "@/lib/db";
 
@@ -11,7 +13,12 @@ export default async function BooksPage() {
   return (
     <div className="max-w-2xl mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-stone-800">나의 책 목록</h1>
+        <div className="flex items-center gap-3">
+          <Link href="/" className="text-xs text-stone-400 hover:text-stone-600 transition-colors">
+            ← 홈
+          </Link>
+          <h1 className="text-2xl font-semibold text-stone-800">나의 책 목록</h1>
+        </div>
         <Link
           href="/books/new"
           className="bg-stone-800 text-white px-4 py-2 rounded-xl text-sm hover:bg-stone-700 transition-colors"

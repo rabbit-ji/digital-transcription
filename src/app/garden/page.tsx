@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import { db, ensureSchema } from "@/lib/db";
 import type { Season } from "@/lib/flowers";
