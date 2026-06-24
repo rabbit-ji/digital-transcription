@@ -44,21 +44,9 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [review, setReview] = useState("");
-  const [savingReview, setSavingReview] = useState(false);
-
-  const [firstSentence, setFirstSentence] = useState("");
-  const [lastSentence, setLastSentence] = useState("");
-  const [savingSentences, setSavingSentences] = useState(false);
-
-  const [recordedAt, setRecordedAt] = useState("");
-  const [savingDate, setSavingDate] = useState(false);
-
   const [passageContent, setPassageContent] = useState("");
   const [passagePage, setPassagePage] = useState("");
   const [addingPassage, setAddingPassage] = useState(false);
-
-  const [deletingBook, setDeletingBook] = useState(false);
 
   const [expandedSimilarId, setExpandedSimilarId] = useState<number | null>(null);
   const [similarPassages, setSimilarPassages] = useState<Record<number, SimilarPassage[]>>({});
@@ -71,63 +59,10 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
         if (data.error) { setError(data.error); return; }
         setBook(data.book as Book);
         setPassages(data.passages as Passage[]);
-        setReview(data.book.review ?? "");
-        setFirstSentence(data.book.first_sentence ?? "");
-        setLastSentence(data.book.last_sentence ?? "");
-        setRecordedAt(data.book.recorded_at ? String(data.book.recorded_at).substring(0, 10) : "");
       })
       .catch(() => setError("책 정보를 불러오지 못했어요"))
       .finally(() => setLoading(false));
   }, [id]);
-
-  async function saveDate() {
-    if (!recordedAt) return;
-    setSavingDate(true);
-    try {
-      const res = await fetch(`/api/books/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recorded_at: recordedAt }),
-      });
-      const data = await res.json();
-      if (res.ok) setBook(data.book as Book);
-    } finally {
-      setSavingDate(false);
-    }
-  }
-
-  async function saveSentences() {
-    setSavingSentences(true);
-    try {
-      const res = await fetch(`/api/books/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ first_sentence: firstSentence, last_sentence: lastSentence }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setBook(data.book as Book);
-    } finally {
-      setSavingSentences(false);
-    }
-  }
-
-  async function saveReview() {
-    if (!book) return;
-    setSavingReview(true);
-    try {
-      const res = await fetch(`/api/books/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ review }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setBook(data.book as Book);
-    } finally {
-      setSavingReview(false);
-    }
-  }
 
   async function addPassage() {
     if (!passageContent.trim()) return;
@@ -157,13 +92,6 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
     setPassages((prev) => prev.filter((p) => p.id !== passageId));
   }
 
-  async function deleteBook() {
-    if (!confirm("정말 이 책을 삭제할까요? 모든 필사 내용도 함께 삭제됩니다.")) return;
-    setDeletingBook(true);
-    await fetch(`/api/books/${id}`, { method: "DELETE" });
-    router.push("/books");
-  }
-
   async function toggleSimilar(passageId: number) {
     if (expandedSimilarId === passageId) {
       setExpandedSimilarId(null);
@@ -189,11 +117,15 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
     </div>
   );
 
+  const formattedDate = book.recorded_at
+    ? String(book.recorded_at).substring(0, 10).replace(/-/g, ".")
+    : null;
+
   return (
     <div className="max-w-2xl mx-auto p-4 sm:p-6 space-y-6">
       {/* 헤더 */}
       <div className="flex items-start gap-4">
-        <button onClick={() => router.back()} className="text-stone-400 hover:text-stone-600 text-sm mt-1 cursor-pointer">←</button>
+        <button onClick={() => router.back()} className="text-stone-400 hover:text-stone-600 text-sm mt-1 cursor-pointer flex-shrink-0">←</button>
         {book.cover_url ? (
           <img src={book.cover_url} alt="" className="w-16 h-22 object-cover rounded-lg shadow flex-shrink-0" />
         ) : (
@@ -202,14 +134,14 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
         <div className="flex-1 min-w-0">
           <h1 className="text-xl font-semibold text-stone-800">{book.title}</h1>
           {book.author && <p className="text-sm text-stone-500 mt-0.5">{book.author}</p>}
+          {formattedDate && <p className="text-xs text-stone-400 mt-1">📅 {formattedDate}</p>}
         </div>
-        <button
-          onClick={deleteBook}
-          disabled={deletingBook}
-          className="text-xs text-stone-400 hover:text-red-400 transition-colors flex-shrink-0"
+        <Link
+          href={`/books/${id}/edit`}
+          className="text-xs text-stone-400 hover:text-stone-600 transition-colors flex-shrink-0 mt-1"
         >
-          삭제
-        </button>
+          편집
+        </Link>
       </div>
 
       {/* 꽃 카드 */}
@@ -223,79 +155,32 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       )}
 
-      {/* 등록일자 편집 */}
-      <div>
-        <h2 className="text-sm font-medium text-stone-600 mb-2">📅 등록일자</h2>
-        <div className="flex gap-2 items-center">
-          <input
-            type="date"
-            value={recordedAt}
-            onChange={(e) => setRecordedAt(e.target.value)}
-            className="flex-1 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
-          />
-          <button
-            onClick={saveDate}
-            disabled={savingDate || !recordedAt}
-            className="bg-stone-800 text-white px-4 py-2 rounded-xl text-sm disabled:opacity-50 hover:bg-stone-700 transition-colors whitespace-nowrap"
-          >
-            {savingDate ? "저장 중…" : "날짜 저장"}
-          </button>
-        </div>
-        <p className="text-xs text-stone-400 mt-1">날짜를 바꾸면 해당 계절의 꽃으로 다시 지정돼요.</p>
-      </div>
-
       {/* 첫 문장 / 마지막 문장 */}
-      <div>
-        <h2 className="text-sm font-medium text-stone-600 mb-3">📖 첫 문장 · 마지막 문장</h2>
+      {(book.first_sentence || book.last_sentence) && (
         <div className="space-y-3">
-          <div>
-            <p className="text-xs text-stone-400 mb-1">첫 문장</p>
-            <textarea
-              value={firstSentence}
-              onChange={(e) => setFirstSentence(e.target.value)}
-              placeholder="책의 첫 문장을 기록해두세요…"
-              rows={2}
-              className="w-full border border-stone-200 rounded-2xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-stone-300"
-            />
-          </div>
-          <div>
-            <p className="text-xs text-stone-400 mb-1">마지막 문장</p>
-            <textarea
-              value={lastSentence}
-              onChange={(e) => setLastSentence(e.target.value)}
-              placeholder="책의 마지막 문장을 기록해두세요…"
-              rows={2}
-              className="w-full border border-stone-200 rounded-2xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-stone-300"
-            />
-          </div>
-          <button
-            onClick={saveSentences}
-            disabled={savingSentences}
-            className="bg-stone-800 text-white px-4 py-2 rounded-xl text-sm disabled:opacity-50 hover:bg-stone-700 transition-colors"
-          >
-            {savingSentences ? "저장 중…" : "저장"}
-          </button>
+          <h2 className="text-sm font-medium text-stone-600">📖 첫 문장 · 마지막 문장</h2>
+          {book.first_sentence && (
+            <div className="border-l-2 border-stone-200 pl-4">
+              <p className="text-xs text-stone-400 mb-1">첫 문장</p>
+              <p className="text-sm text-stone-700 leading-relaxed">{book.first_sentence}</p>
+            </div>
+          )}
+          {book.last_sentence && (
+            <div className="border-l-2 border-stone-200 pl-4">
+              <p className="text-xs text-stone-400 mb-1">마지막 문장</p>
+              <p className="text-sm text-stone-700 leading-relaxed">{book.last_sentence}</p>
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       {/* 소감 */}
-      <div>
-        <h2 className="text-sm font-medium text-stone-600 mb-2">📝 나의 소감</h2>
-        <textarea
-          value={review}
-          onChange={(e) => setReview(e.target.value)}
-          placeholder="이 책에 대한 소감을 적어보세요…"
-          rows={4}
-          className="w-full border border-stone-200 rounded-2xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-stone-300"
-        />
-        <button
-          onClick={saveReview}
-          disabled={savingReview}
-          className="mt-2 bg-stone-800 text-white px-4 py-2 rounded-xl text-sm disabled:opacity-50 hover:bg-stone-700 transition-colors"
-        >
-          {savingReview ? "저장 중…" : "소감 저장"}
-        </button>
-      </div>
+      {book.review && (
+        <div>
+          <h2 className="text-sm font-medium text-stone-600 mb-2">📝 나의 소감</h2>
+          <p className="text-sm text-stone-700 leading-relaxed whitespace-pre-wrap bg-stone-50 rounded-2xl p-4 border border-stone-100">{book.review}</p>
+        </div>
+      )}
 
       {/* 필사 목록 */}
       <div>
