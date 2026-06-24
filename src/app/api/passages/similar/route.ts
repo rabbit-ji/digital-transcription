@@ -1,0 +1,52 @@
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
+
+export async function GET(request: NextRequest) {
+  const passageIdStr = request.nextUrl.searchParams.get("passage_id");
+  if (!passageIdStr) {
+    return NextResponse.json({ similar: [] });
+  }
+
+  const passageId = parseInt(passageIdStr, 10);
+  if (isNaN(passageId)) {
+    return NextResponse.json({ similar: [] });
+  }
+
+  const sourceResult = await db().execute({
+    sql: "SELECT book_id FROM passages WHERE id = ?",
+    args: [passageId],
+  });
+  if (sourceResult.rows.length === 0 || sourceResult.rows[0].book_id === null) {
+    return NextResponse.json({ similar: [] });
+  }
+  const sourceBookId = Number(sourceResult.rows[0].book_id);
+
+  try {
+    const result = await db().execute({
+      sql: `
+        SELECT p.id, p.content, p.page, p.book_id,
+               b.title AS book_title, vt.distance
+        FROM vector_top_k('passages_embedding_idx',
+               (SELECT embedding FROM passages WHERE id = ?), 6) vt
+        JOIN passages p ON p.rowid = vt.rowid
+        JOIN books b ON b.id = p.book_id
+        WHERE p.id != ? AND p.book_id != ?
+        LIMIT 5
+      `,
+      args: [passageId, passageId, sourceBookId],
+    });
+
+    const similar = result.rows.map((r) => ({
+      id: Number(r.id),
+      content: String(r.content),
+      page: r.page !== null ? Number(r.page) : null,
+      book_id: Number(r.book_id),
+      book_title: String(r.book_title),
+      distance: Number(r.distance),
+    }));
+
+    return NextResponse.json({ similar });
+  } catch {
+    return NextResponse.json({ similar: [] });
+  }
+}
