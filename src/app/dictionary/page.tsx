@@ -60,7 +60,7 @@ function DictionaryContent() {
     <div className="max-w-lg mx-auto p-4 sm:p-6 space-y-8">
       <div className="flex items-center gap-2 sm:gap-3">
         <button
-          onClick={() => router.back()}
+          onClick={() => router.push("/")}
           className="text-xs text-stone-400 hover:text-stone-600 transition-colors flex-shrink-0 cursor-pointer"
         >
           ← 홈
