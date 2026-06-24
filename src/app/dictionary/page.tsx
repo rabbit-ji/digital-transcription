@@ -57,7 +57,7 @@ function DictionaryContent() {
   };
 
   return (
-    <div className="max-w-lg mx-auto p-6 space-y-8">
+    <div className="max-w-lg mx-auto p-4 sm:p-6 space-y-8">
       <div className="pt-8">
         <h1 className="text-2xl font-semibold text-stone-800">나만의 인용 사전</h1>
         <p className="text-stone-400 text-sm mt-1">태그로 필사를 모아보세요</p>
@@ -130,7 +130,7 @@ function DictionaryContent() {
 
 export default function DictionaryPage() {
   return (
-    <Suspense fallback={<div className="max-w-lg mx-auto p-6 pt-16 text-stone-300 text-sm text-center">불러오는 중…</div>}>
+    <Suspense fallback={<div className="max-w-lg mx-auto p-4 sm:p-6 pt-16 text-stone-300 text-sm text-center">불러오는 중…</div>}>
       <DictionaryContent />
     </Suspense>
   );

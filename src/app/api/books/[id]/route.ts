@@ -28,30 +28,44 @@ export async function PATCH(req: Request, { params }: Params) {
   const { id } = await params;
   const body = await req.json().catch(() => ({}));
 
-  // review가 새로 저장될 때 꽃 매칭 시도
-  if ("review" in body && body.review?.trim()) {
+  // 소감 또는 등록일자 변경 시 꽃 재매칭
+  const shouldRematching =
+    ("review" in body && body.review?.trim()) ||
+    ("recorded_at" in body && body.recorded_at?.trim());
+
+  if (shouldRematching) {
     try {
       const bookRow = await db().execute({
-        sql: "SELECT recorded_at FROM books WHERE id = ?",
+        sql: "SELECT review, recorded_at FROM books WHERE id = ?",
         args: [id],
       });
-      const recordedAt = String(bookRow.rows[0]?.recorded_at ?? new Date().toISOString());
-      const season = getSeason(recordedAt);
-      const candidates = getFlowersBySeason(season);
-      const flower = await matchFlower(body.review.trim(), candidates);
-      if (flower) {
-        body.flower_name = flower.name;
-        body.flower_meaning = flower.meaning;
-        body.flower_season = flower.season;
-        body.flower_emoji = flower.emoji;
-        body.flower_reason = flower.reason;
+      const effectiveReview =
+        "review" in body
+          ? (body.review?.trim() ?? "")
+          : String(bookRow.rows[0]?.review ?? "").trim();
+      const effectiveDate =
+        "recorded_at" in body
+          ? body.recorded_at?.trim()
+          : String(bookRow.rows[0]?.recorded_at ?? new Date().toISOString());
+
+      if (effectiveReview) {
+        const season = getSeason(effectiveDate);
+        const candidates = getFlowersBySeason(season);
+        const flower = await matchFlower(effectiveReview, candidates);
+        if (flower) {
+          body.flower_name = flower.name;
+          body.flower_meaning = flower.meaning;
+          body.flower_season = flower.season;
+          body.flower_emoji = flower.emoji;
+          body.flower_reason = flower.reason;
+        }
       }
     } catch {
-      // 꽃 매칭 실패해도 소감 저장은 계속
+      // 꽃 매칭 실패해도 저장은 계속
     }
   }
 
-  const allowed = ["title", "author", "review", "flower_name", "flower_meaning", "flower_season", "flower_emoji", "flower_reason"];
+  const allowed = ["title", "author", "review", "recorded_at", "flower_name", "flower_meaning", "flower_season", "flower_emoji", "flower_reason"];
   const updates: string[] = [];
   const args: InValue[] = [];
   for (const key of allowed) {

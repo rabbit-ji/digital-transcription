@@ -14,6 +14,7 @@ interface Book {
   flower_season: string | null;
   flower_emoji: string | null;
   flower_reason: string | null;
+  recorded_at: string | null;
 }
 
 interface Passage {
@@ -44,6 +45,9 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
   const [review, setReview] = useState("");
   const [savingReview, setSavingReview] = useState(false);
 
+  const [recordedAt, setRecordedAt] = useState("");
+  const [savingDate, setSavingDate] = useState(false);
+
   const [passageContent, setPassageContent] = useState("");
   const [passagePage, setPassagePage] = useState("");
   const [addingPassage, setAddingPassage] = useState(false);
@@ -62,10 +66,27 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
         setBook(data.book as Book);
         setPassages(data.passages as Passage[]);
         setReview(data.book.review ?? "");
+        setRecordedAt(data.book.recorded_at ? String(data.book.recorded_at).substring(0, 10) : "");
       })
       .catch(() => setError("책 정보를 불러오지 못했어요"))
       .finally(() => setLoading(false));
   }, [id]);
+
+  async function saveDate() {
+    if (!recordedAt) return;
+    setSavingDate(true);
+    try {
+      const res = await fetch(`/api/books/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recorded_at: recordedAt }),
+      });
+      const data = await res.json();
+      if (res.ok) setBook(data.book as Book);
+    } finally {
+      setSavingDate(false);
+    }
+  }
 
   async function saveReview() {
     if (!book) return;
@@ -136,16 +157,16 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
     }
   }
 
-  if (loading) return <div className="max-w-2xl mx-auto p-6 text-stone-400">불러오는 중…</div>;
+  if (loading) return <div className="max-w-2xl mx-auto p-4 sm:p-6 text-stone-400">불러오는 중…</div>;
   if (error || !book) return (
-    <div className="max-w-2xl mx-auto p-6">
+    <div className="max-w-2xl mx-auto p-4 sm:p-6">
       <p className="text-red-500">{error || "책을 찾을 수 없어요"}</p>
       <Link href="/books" className="text-sm text-stone-500 underline mt-2 inline-block">목록으로</Link>
     </div>
   );
 
   return (
-    <div className="max-w-2xl mx-auto p-6 space-y-6">
+    <div className="max-w-2xl mx-auto p-4 sm:p-6 space-y-6">
       {/* 헤더 */}
       <div className="flex items-start gap-4">
         <Link href="/books" className="text-stone-400 hover:text-stone-600 text-sm mt-1">←</Link>
@@ -177,6 +198,27 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
           {book.flower_reason && <p className="text-sm text-stone-600 mt-2 italic">{book.flower_reason}</p>}
         </div>
       )}
+
+      {/* 등록일자 편집 */}
+      <div>
+        <h2 className="text-sm font-medium text-stone-600 mb-2">📅 등록일자</h2>
+        <div className="flex gap-2 items-center">
+          <input
+            type="date"
+            value={recordedAt}
+            onChange={(e) => setRecordedAt(e.target.value)}
+            className="flex-1 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+          />
+          <button
+            onClick={saveDate}
+            disabled={savingDate || !recordedAt}
+            className="bg-stone-800 text-white px-4 py-2 rounded-xl text-sm disabled:opacity-50 hover:bg-stone-700 transition-colors whitespace-nowrap"
+          >
+            {savingDate ? "저장 중…" : "날짜 저장"}
+          </button>
+        </div>
+        <p className="text-xs text-stone-400 mt-1">날짜를 바꾸면 해당 계절의 꽃으로 다시 지정돼요.</p>
+      </div>
 
       {/* 소감 */}
       <div>
