@@ -3,11 +3,18 @@ import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 interface BookData {
+  title: string;
   review: string | null;
   first_sentence: string | null;
   last_sentence: string | null;
   recorded_at: string | null;
-  title: string;
+}
+
+interface Passage {
+  id: number;
+  content: string;
+  page: number | null;
+  created_at: string;
 }
 
 export default function BookEditPage({ params }: { params: Promise<{ id: string }> }) {
@@ -24,6 +31,11 @@ export default function BookEditPage({ params }: { params: Promise<{ id: string 
   const [deletingBook, setDeletingBook] = useState(false);
   const [error, setError] = useState("");
 
+  const [passages, setPassages] = useState<Passage[]>([]);
+  const [passageContent, setPassageContent] = useState("");
+  const [passagePage, setPassagePage] = useState("");
+  const [addingPassage, setAddingPassage] = useState(false);
+
   useEffect(() => {
     fetch(`/api/books/${id}`)
       .then((r) => r.json())
@@ -35,6 +47,7 @@ export default function BookEditPage({ params }: { params: Promise<{ id: string 
         setFirstSentence(book.first_sentence ?? "");
         setLastSentence(book.last_sentence ?? "");
         setRecordedAt(book.recorded_at ? String(book.recorded_at).substring(0, 10) : "");
+        setPassages(data.passages as Passage[]);
       })
       .catch(() => setError("책 정보를 불러오지 못했어요"))
       .finally(() => setLoading(false));
@@ -61,6 +74,34 @@ export default function BookEditPage({ params }: { params: Promise<{ id: string 
       setError(e instanceof Error ? e.message : "저장 중 오류가 발생했어요");
       setSaving(false);
     }
+  }
+
+  async function addPassage() {
+    if (!passageContent.trim()) return;
+    setAddingPassage(true);
+    try {
+      const res = await fetch("/api/passages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          book_id: id,
+          content: passageContent.trim(),
+          page: passagePage ? Number(passagePage) : undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setPassages((prev) => [...prev, data.passage as Passage]);
+      setPassageContent("");
+      setPassagePage("");
+    } finally {
+      setAddingPassage(false);
+    }
+  }
+
+  async function deletePassage(passageId: number) {
+    await fetch(`/api/passages/${passageId}`, { method: "DELETE" });
+    setPassages((prev) => prev.filter((p) => p.id !== passageId));
   }
 
   async function deleteBook() {
@@ -158,6 +199,55 @@ export default function BookEditPage({ params }: { params: Promise<{ id: string 
         >
           취소
         </button>
+      </div>
+
+      {/* 필사 */}
+      <div className="pt-2 border-t border-stone-100 space-y-3">
+        <h2 className="text-sm font-medium text-stone-600">✍️ 필사 ({passages.length})</h2>
+
+        {passages.length > 0 && (
+          <div className="space-y-2">
+            {passages.map((p) => (
+              <div key={p.id} className="bg-stone-50 rounded-xl border border-stone-100 p-3 relative group">
+                <p className="text-stone-700 text-sm leading-relaxed whitespace-pre-wrap pr-8">{p.content}</p>
+                {p.page && <p className="text-xs text-stone-400 mt-1">p. {p.page}</p>}
+                <button
+                  onClick={() => deletePassage(p.id)}
+                  className="absolute top-3 right-3 text-xs text-stone-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  삭제
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 필사 추가 폼 */}
+        <div className="space-y-2">
+          <textarea
+            value={passageContent}
+            onChange={(e) => setPassageContent(e.target.value)}
+            placeholder="밑줄 그은 구절을 입력하세요…"
+            rows={3}
+            className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-stone-300"
+          />
+          <div className="flex gap-2">
+            <input
+              type="number"
+              value={passagePage}
+              onChange={(e) => setPassagePage(e.target.value)}
+              placeholder="페이지 (선택)"
+              className="w-32 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+            />
+            <button
+              onClick={addPassage}
+              disabled={addingPassage || !passageContent.trim()}
+              className="flex-1 bg-stone-100 text-stone-700 py-2 rounded-xl text-sm disabled:opacity-50 hover:bg-stone-200 transition-colors"
+            >
+              {addingPassage ? "저장 중…" : "+ 필사 추가"}
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* 책 삭제 */}

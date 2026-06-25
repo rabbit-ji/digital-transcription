@@ -59,7 +59,7 @@ export default function NewBookPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "추가 실패");
-      router.push(`/books/${data.book.id}`);
+      router.push(`/books/${data.book.id}/edit`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "추가 중 오류가 발생했어요");
       setSubmitting(false);
