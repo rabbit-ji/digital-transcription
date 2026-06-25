@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -29,11 +29,23 @@ function DictionaryContent() {
   const [passages, setPassages] = useState<PassageWithBook[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const tagContainerRef = useRef<HTMLDivElement>(null);
+  const [tagsOverflow, setTagsOverflow] = useState(false);
+  const [tagsExpanded, setTagsExpanded] = useState(false);
+
   useEffect(() => {
     fetch("/api/tags")
       .then((r) => r.json())
       .then((d) => setTags(d.tags ?? []));
   }, []);
+
+  const filteredTags = tags.filter((t) => t.count > 0);
+
+  useEffect(() => {
+    const el = tagContainerRef.current;
+    if (!el) return;
+    setTagsOverflow(el.scrollHeight > el.clientHeight + 2);
+  }, [tags]);
 
   const fetchPassages = useCallback(async (tag: string) => {
     setLoading(true);
@@ -71,28 +83,41 @@ function DictionaryContent() {
         </div>
       </div>
 
-      {tags.length === 0 ? (
+      {filteredTags.length === 0 ? (
         <div className="bg-stone-50 rounded-2xl p-8 text-center border border-stone-100">
           <p className="text-3xl mb-3">🏷️</p>
           <p className="text-stone-500 text-sm">아직 태그가 없어요.</p>
           <p className="text-stone-400 text-xs mt-1">필사를 추가하면 AI가 자동으로 태그를 붙여드려요.</p>
         </div>
       ) : (
-        <div className="flex flex-wrap gap-2">
-          {tags.map((tag) => (
+        <div>
+          <div
+            ref={tagContainerRef}
+            className={`flex flex-wrap gap-2 overflow-hidden ${tagsExpanded ? "" : "max-h-[104px]"}`}
+          >
+            {filteredTags.map((tag) => (
+              <button
+                key={tag.id}
+                onClick={() => handleTag(tag.name)}
+                className={`px-3 py-1.5 rounded-full text-xs transition-colors ${
+                  selectedTag === tag.name
+                    ? "bg-stone-800 text-white"
+                    : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                }`}
+              >
+                {tag.name}
+                <span className="ml-1 opacity-60">{tag.count}</span>
+              </button>
+            ))}
+          </div>
+          {tagsOverflow && (
             <button
-              key={tag.id}
-              onClick={() => handleTag(tag.name)}
-              className={`px-3 py-1.5 rounded-full text-xs transition-colors ${
-                selectedTag === tag.name
-                  ? "bg-stone-800 text-white"
-                  : "bg-stone-100 text-stone-600 hover:bg-stone-200"
-              }`}
+              onClick={() => setTagsExpanded(!tagsExpanded)}
+              className="mt-2 text-xs text-stone-400 hover:text-stone-600 transition-colors cursor-pointer"
             >
-              {tag.name}
-              <span className="ml-1 opacity-60">{tag.count}</span>
+              {tagsExpanded ? "접기 ↑" : "더 보기 ↓"}
             </button>
-          ))}
+          )}
         </div>
       )}
 
