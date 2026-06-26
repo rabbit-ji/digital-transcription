@@ -12,6 +12,7 @@ export async function POST() {
 
   let synced = 0;
   let rematched = 0;
+  const failed: { id: number; reason: string }[] = [];
 
   for (const row of result.rows) {
     const id = row.id as number;
@@ -45,12 +46,14 @@ export async function POST() {
             args: [flower.name, flower.meaning, flower.season, flower.emoji, flower.reason, id],
           });
           rematched++;
+        } else {
+          failed.push({ id, reason: "AI가 후보 꽃 목록에 없는 이름을 반환했거나 응답이 없음" });
         }
-      } catch {
-        // 재매칭 실패 시 해당 책 건너뜀
+      } catch (e) {
+        failed.push({ id, reason: e instanceof Error ? e.message : String(e) });
       }
     }
   }
 
-  return NextResponse.json({ ok: true, synced, rematched });
+  return NextResponse.json({ ok: true, synced, rematched, failed });
 }

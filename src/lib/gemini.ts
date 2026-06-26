@@ -78,7 +78,7 @@ ${candidateList}
 
   try {
     const parsed = JSON.parse(res.text ?? "{}") as { name?: string; reason?: string };
-    const chosen = candidates.find((c) => c.name === parsed.name);
+    const chosen = candidates.find((c) => c.name === parsed.name?.trim());
     if (!chosen) return null;
     return { ...chosen, reason: parsed.reason ?? "" };
   } catch {
