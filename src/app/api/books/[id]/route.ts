@@ -2,7 +2,7 @@ import { NextResponse, after } from "next/server";
 import type { InValue } from "@libsql/client";
 import { db, ensureSchema, nowIso } from "@/lib/db";
 import { matchFlower } from "@/lib/gemini";
-import { getSeason, getFlowersBySeason } from "@/lib/flowers";
+import { FLOWERS, getSeason, getFlowersBySeason } from "@/lib/flowers";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -95,7 +95,10 @@ export async function PATCH(req: Request, { params }: Params) {
       try {
         const season = getSeason(dateForFlower);
         const candidates = getFlowersBySeason(season);
-        const flower = await matchFlower(reviewForFlower, candidates);
+        let flower = await matchFlower(reviewForFlower, candidates);
+        if (!flower) {
+          flower = await matchFlower(reviewForFlower, FLOWERS);
+        }
         if (flower) {
           await db().execute({
             sql: `UPDATE books
