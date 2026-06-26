@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { db, ensureSchema } from "@/lib/db";
 import type { Season } from "@/lib/flowers";
+import { SyncButton } from "./SyncButton";
 
 interface GardenBook {
   id: number;
@@ -116,9 +117,12 @@ export default async function GardenPage() {
         </div>
       )}
 
-      <Link href="/" className="text-xs text-stone-400 hover:text-stone-600 transition-colors block text-center">
-        ← 홈으로
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link href="/" className="text-xs text-stone-400 hover:text-stone-600 transition-colors">
+          ← 홈으로
+        </Link>
+        <SyncButton />
+      </div>
     </div>
   );
 }
