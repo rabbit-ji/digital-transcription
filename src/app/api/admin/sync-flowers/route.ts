@@ -36,7 +36,11 @@ export async function POST() {
         const effectiveDate = recordedAt?.trim() || new Date().toISOString();
         const season = getSeason(effectiveDate);
         const candidates = getFlowersBySeason(season);
-        const flower = await matchFlower(review.trim(), candidates);
+        // 1차: 계절 필터 후보, 실패 시 2차: 전체 꽃 목록
+        let flower = await matchFlower(review.trim(), candidates);
+        if (!flower) {
+          flower = await matchFlower(review.trim(), FLOWERS);
+        }
         if (flower) {
           await db().execute({
             sql: `UPDATE books
@@ -47,7 +51,7 @@ export async function POST() {
           });
           rematched++;
         } else {
-          failed.push({ id, reason: "AI가 후보 꽃 목록에 없는 이름을 반환했거나 응답이 없음" });
+          failed.push({ id, reason: "전체 꽃 목록으로도 매칭 실패" });
         }
       } catch (e) {
         failed.push({ id, reason: e instanceof Error ? e.message : String(e) });
