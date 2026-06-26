@@ -44,8 +44,8 @@ export async function PATCH(req: Request, { params }: Params) {
           ? (body.review?.trim() ?? "")
           : String(bookRow.rows[0]?.review ?? "").trim();
       const effectiveDate =
-        "recorded_at" in body
-          ? body.recorded_at?.trim()
+        "recorded_at" in body && body.recorded_at != null
+          ? body.recorded_at.trim()
           : String(bookRow.rows[0]?.recorded_at ?? new Date().toISOString());
 
       if (effectiveReview) {
