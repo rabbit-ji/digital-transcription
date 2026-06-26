@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import type { InValue } from "@libsql/client";
 import { db, ensureSchema, nowIso } from "@/lib/db";
 import { matchFlower } from "@/lib/gemini";
@@ -28,10 +28,14 @@ export async function PATCH(req: Request, { params }: Params) {
   const { id } = await params;
   const body = await req.json().catch(() => ({}));
 
-  // 소감 또는 등록일자 변경 시 꽃 재매칭
+  // 소감 또는 등록일자 변경 시 꽃 재매칭 여부 판단
   const shouldRematching =
     ("review" in body && body.review?.trim()) ||
     ("recorded_at" in body && body.recorded_at?.trim());
+
+  // 백그라운드 꽃 매칭에 쓸 값을 미리 확보 (DB에서 기존 값 읽기)
+  let pendingFlowerReview: string | null = null;
+  let pendingFlowerDate: string | null = null;
 
   if (shouldRematching) {
     try {
@@ -49,19 +53,11 @@ export async function PATCH(req: Request, { params }: Params) {
           : String(bookRow.rows[0]?.recorded_at ?? new Date().toISOString());
 
       if (effectiveReview) {
-        const season = getSeason(effectiveDate);
-        const candidates = getFlowersBySeason(season);
-        const flower = await matchFlower(effectiveReview, candidates);
-        if (flower) {
-          body.flower_name = flower.name;
-          body.flower_meaning = flower.meaning;
-          body.flower_season = flower.season;
-          body.flower_emoji = flower.emoji;
-          body.flower_reason = flower.reason;
-        }
+        pendingFlowerReview = effectiveReview;
+        pendingFlowerDate = effectiveDate;
       }
     } catch {
-      // 꽃 매칭 실패해도 저장은 계속
+      // DB 조회 실패 시 꽃 매칭 건너뜀
     }
   }
 
@@ -70,6 +66,8 @@ export async function PATCH(req: Request, { params }: Params) {
   const args: InValue[] = [];
   for (const key of allowed) {
     if (key in body) {
+      // recorded_at은 null로 덮어쓰지 않음 (NOT NULL 컬럼, 기존 날짜 보존)
+      if (key === "recorded_at" && body[key] === null) continue;
       updates.push(`${key} = ?`);
       args.push(body[key]);
     }
@@ -88,6 +86,31 @@ export async function PATCH(req: Request, { params }: Params) {
     sql: "SELECT * FROM books WHERE id = ?",
     args: [id],
   });
+
+  // 꽃 매칭은 응답 후 백그라운드에서 수행 (필사 임베딩과 동일한 패턴)
+  if (pendingFlowerReview) {
+    const reviewForFlower = pendingFlowerReview;
+    const dateForFlower = pendingFlowerDate ?? new Date().toISOString();
+    after(async () => {
+      try {
+        const season = getSeason(dateForFlower);
+        const candidates = getFlowersBySeason(season);
+        const flower = await matchFlower(reviewForFlower, candidates);
+        if (flower) {
+          await db().execute({
+            sql: `UPDATE books
+                  SET flower_name = ?, flower_meaning = ?, flower_season = ?,
+                      flower_emoji = ?, flower_reason = ?
+                  WHERE id = ?`,
+            args: [flower.name, flower.meaning, flower.season, flower.emoji, flower.reason, id],
+          });
+        }
+      } catch {
+        // 꽃 매칭 실패 — 정원 동기화 버튼으로 재시도 가능
+      }
+    });
+  }
+
   return NextResponse.json({ book: book.rows[0] });
 }
 
