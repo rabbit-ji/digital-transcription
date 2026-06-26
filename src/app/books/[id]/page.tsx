@@ -223,32 +223,6 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
           </div>
         )}
 
-        {/* 필사 추가 폼 */}
-        <div className="mt-4 space-y-2">
-          <textarea
-            value={passageContent}
-            onChange={(e) => setPassageContent(e.target.value)}
-            placeholder="밑줄 그은 구절을 입력하세요…"
-            rows={3}
-            className="w-full border border-stone-200 rounded-2xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-stone-300"
-          />
-          <div className="flex gap-2">
-            <input
-              type="number"
-              value={passagePage}
-              onChange={(e) => setPassagePage(e.target.value)}
-              placeholder="페이지 (선택)"
-              className="w-32 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
-            />
-            <button
-              onClick={addPassage}
-              disabled={addingPassage || !passageContent.trim()}
-              className="flex-1 bg-stone-800 text-white py-2 rounded-xl text-sm disabled:opacity-50 hover:bg-stone-700 transition-colors"
-            >
-              {addingPassage ? "저장 중…" : "+ 필사 추가"}
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* 마지막 문장 */}
@@ -260,6 +234,34 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
           </div>
         </div>
       )}
+
+      {/* 필사 추가 폼 */}
+      <div className="space-y-2">
+        <h2 className="text-sm font-medium text-stone-600">✍️ 필사 추가</h2>
+        <textarea
+          value={passageContent}
+          onChange={(e) => setPassageContent(e.target.value)}
+          placeholder="밑줄 그은 구절을 입력하세요…"
+          rows={3}
+          className="w-full border border-stone-200 rounded-2xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-stone-300"
+        />
+        <div className="flex gap-2">
+          <input
+            type="number"
+            value={passagePage}
+            onChange={(e) => setPassagePage(e.target.value)}
+            placeholder="페이지 (선택)"
+            className="w-32 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+          />
+          <button
+            onClick={addPassage}
+            disabled={addingPassage || !passageContent.trim()}
+            className="flex-1 bg-stone-800 text-white py-2 rounded-xl text-sm disabled:opacity-50 hover:bg-stone-700 transition-colors"
+          >
+            {addingPassage ? "저장 중…" : "+ 필사 추가"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

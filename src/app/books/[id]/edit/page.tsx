@@ -178,7 +178,7 @@ export default function BookEditPage({ params }: { params: Promise<{ id: string 
         </div>
 
         {/* 오른쪽: 필사 + 마지막 문장 */}
-        <div className="mt-8 lg:mt-0 pt-8 lg:pt-0 border-t lg:border-t-0 border-stone-100 space-y-6">
+        <div className="mt-8 lg:mt-0 space-y-6">
           <div className="space-y-3">
             <h2 className="text-sm font-medium text-stone-600">✍️ 필사 ({passages.length})</h2>
 
