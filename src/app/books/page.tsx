@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { db, ensureSchema } from "@/lib/db";
+import { SyncButton } from "@/app/garden/SyncButton";
 
 export default async function BooksPage() {
   await ensureSchema();
@@ -19,12 +20,15 @@ export default async function BooksPage() {
           </Link>
           <h1 className="text-xl sm:text-2xl font-semibold text-stone-800 truncate">나의 책 목록</h1>
         </div>
-        <Link
-          href="/books/new"
-          className="bg-stone-800 text-white px-3 sm:px-4 py-2 rounded-xl text-sm hover:bg-stone-700 transition-colors flex-shrink-0"
-        >
-          + 책 추가
-        </Link>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <SyncButton />
+          <Link
+            href="/books/new"
+            className="bg-stone-800 text-white px-3 sm:px-4 py-2 rounded-xl text-sm hover:bg-stone-700 transition-colors"
+          >
+            + 책 추가
+          </Link>
+        </div>
       </div>
 
       {books.length === 0 ? (

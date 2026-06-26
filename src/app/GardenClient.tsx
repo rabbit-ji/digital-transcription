@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import type { Season } from "@/lib/flowers";
 
 interface GardenBook {
@@ -33,7 +34,31 @@ const SEASON_LABEL: Record<Season, string> = {
 };
 
 export default function GardenClient({ books }: Props) {
+  const router = useRouter();
   const [viewMode, setViewMode] = useState<"garden" | "card">("garden");
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
+
+  const handleSync = useCallback(async () => {
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      const res = await fetch("/api/admin/sync-flowers", { method: "POST" });
+      const data = await res.json() as { synced: number; rematched: number };
+      if (data.synced === 0 && data.rematched === 0) {
+        setSyncResult("모두 최신 상태예요");
+      } else {
+        const parts = [
+          data.synced > 0 && `이모지 ${data.synced}개 업데이트`,
+          data.rematched > 0 && `새로 매칭 ${data.rematched}개`,
+        ].filter(Boolean);
+        setSyncResult(parts.join(", "));
+      }
+      router.refresh();
+    } finally {
+      setSyncing(false);
+    }
+  }, [router]);
 
   const totalCount = books.length;
   const isGarden = viewMode === "garden";
@@ -71,23 +96,41 @@ export default function GardenClient({ books }: Props) {
               </span>
             )}
           </div>
-          <nav className="flex gap-4 pt-1 flex-shrink-0">
-            <Link
-              href="/books"
-              className={`text-sm transition-colors whitespace-nowrap ${
-                isGarden ? "text-emerald-800 hover:text-emerald-950" : "text-stone-500 hover:text-stone-800"
-              }`}
-            >
-              책 목록
-            </Link>
-            <Link
-              href="/dictionary"
-              className={`text-sm transition-colors whitespace-nowrap ${
-                isGarden ? "text-emerald-800 hover:text-emerald-950" : "text-stone-500 hover:text-stone-800"
-              }`}
-            >
-              인용 사전
-            </Link>
+          <nav className="flex flex-col items-end gap-2 pt-1 flex-shrink-0">
+            <div className="flex gap-4">
+              <Link
+                href="/books"
+                className={`text-sm transition-colors whitespace-nowrap ${
+                  isGarden ? "text-emerald-800 hover:text-emerald-950" : "text-stone-500 hover:text-stone-800"
+                }`}
+              >
+                책 목록
+              </Link>
+              <Link
+                href="/dictionary"
+                className={`text-sm transition-colors whitespace-nowrap ${
+                  isGarden ? "text-emerald-800 hover:text-emerald-950" : "text-stone-500 hover:text-stone-800"
+                }`}
+              >
+                인용 사전
+              </Link>
+            </div>
+            <div className="text-right">
+              <button
+                onClick={handleSync}
+                disabled={syncing}
+                className={`text-xs transition-colors disabled:opacity-50 ${
+                  isGarden ? "text-emerald-700/60 hover:text-emerald-900" : "text-stone-400 hover:text-stone-600"
+                }`}
+              >
+                {syncing ? "동기화 중…" : "🔄 꽃 동기화"}
+              </button>
+              {syncResult && (
+                <p className={`text-xs mt-0.5 ${isGarden ? "text-emerald-700/60" : "text-stone-400"}`}>
+                  {syncResult}
+                </p>
+              )}
+            </div>
           </nav>
         </div>
       </div>
