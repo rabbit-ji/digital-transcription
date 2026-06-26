@@ -155,30 +155,21 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
         </div>
       )}
 
-      {/* 첫 문장 / 마지막 문장 */}
-      {(book.first_sentence || book.last_sentence) && (
-        <div className="space-y-3">
-          <h2 className="text-sm font-medium text-stone-600">📖 첫 문장 · 마지막 문장</h2>
-          {book.first_sentence && (
-            <div className="border-l-2 border-stone-200 pl-4">
-              <p className="text-xs text-stone-400 mb-1">첫 문장</p>
-              <p className="text-sm text-stone-700 leading-relaxed">{book.first_sentence}</p>
-            </div>
-          )}
-          {book.last_sentence && (
-            <div className="border-l-2 border-stone-200 pl-4">
-              <p className="text-xs text-stone-400 mb-1">마지막 문장</p>
-              <p className="text-sm text-stone-700 leading-relaxed">{book.last_sentence}</p>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* 소감 */}
       {book.review && (
         <div>
           <h2 className="text-sm font-medium text-stone-600 mb-2">📝 나의 소감</h2>
           <p className="text-sm text-stone-700 leading-relaxed whitespace-pre-wrap bg-stone-50 rounded-2xl p-4 border border-stone-100">{book.review}</p>
+        </div>
+      )}
+
+      {/* 첫 문장 */}
+      {book.first_sentence && (
+        <div>
+          <h2 className="text-sm font-medium text-stone-600 mb-2">📖 첫 문장</h2>
+          <div className="border-l-2 border-stone-200 pl-4">
+            <p className="text-sm text-stone-700 leading-relaxed">{book.first_sentence}</p>
+          </div>
         </div>
       )}
 
@@ -259,6 +250,16 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
           </div>
         </div>
       </div>
+
+      {/* 마지막 문장 */}
+      {book.last_sentence && (
+        <div>
+          <h2 className="text-sm font-medium text-stone-600 mb-2">📖 마지막 문장</h2>
+          <div className="border-l-2 border-stone-200 pl-4">
+            <p className="text-sm text-stone-700 leading-relaxed">{book.last_sentence}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

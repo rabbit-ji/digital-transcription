@@ -151,30 +151,6 @@ export default function BookEditPage({ params }: { params: Promise<{ id: string 
             <p className="text-xs text-stone-400">날짜를 바꾸면 해당 계절의 꽃이 새로 지정돼요.</p>
           </div>
 
-          {/* 첫 문장 */}
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-stone-600">📖 첫 문장</label>
-            <textarea
-              value={firstSentence}
-              onChange={(e) => setFirstSentence(e.target.value)}
-              placeholder="책의 첫 문장을 입력하세요"
-              rows={3}
-              className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-stone-300"
-            />
-          </div>
-
-          {/* 마지막 문장 */}
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-stone-600">📖 마지막 문장</label>
-            <textarea
-              value={lastSentence}
-              onChange={(e) => setLastSentence(e.target.value)}
-              placeholder="책의 마지막 문장을 입력하세요"
-              rows={3}
-              className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-stone-300"
-            />
-          </div>
-
           {/* 소감 */}
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-stone-600">📝 나의 소감</label>
@@ -188,83 +164,107 @@ export default function BookEditPage({ params }: { params: Promise<{ id: string 
             <p className="text-xs text-stone-400">소감을 바탕으로 어울리는 꽃이 선정돼요.</p>
           </div>
 
-          {/* 저장 / 취소 */}
-          <div className="flex gap-3">
-            <button
-              onClick={save}
-              disabled={saving}
-              className="flex-1 bg-stone-800 text-white py-3 rounded-xl text-sm font-medium disabled:opacity-50 hover:bg-stone-700 transition-colors"
-            >
-              {saving ? "저장 중…" : "저장하기"}
-            </button>
-            <button
-              onClick={() => router.back()}
-              className="px-6 py-3 rounded-xl text-sm text-stone-500 border border-stone-200 hover:bg-stone-50 transition-colors"
-            >
-              취소
-            </button>
-          </div>
-
-          {/* 책 삭제 */}
-          <div className="pt-2 border-t border-stone-100">
-            <button
-              onClick={deleteBook}
-              disabled={deletingBook}
-              className="w-full py-3 rounded-xl text-sm text-red-400 border border-red-100 hover:bg-red-50 transition-colors disabled:opacity-50"
-            >
-              {deletingBook ? "삭제 중…" : "책 삭제"}
-            </button>
-          </div>
-        </div>
-
-        {/* 오른쪽: 필사 */}
-        <div className="mt-8 lg:mt-0 pt-8 lg:pt-0 border-t lg:border-t-0 border-stone-100 space-y-3">
-          <h2 className="text-sm font-medium text-stone-600">✍️ 필사 ({passages.length})</h2>
-
-          {passages.length > 0 && (
-            <div className="space-y-2">
-              {passages.map((p) => (
-                <div key={p.id} className="bg-stone-50 rounded-xl border border-stone-100 p-3 relative group">
-                  <p className="text-stone-700 text-sm leading-relaxed whitespace-pre-wrap pr-8">{p.content}</p>
-                  {p.page && <p className="text-xs text-stone-400 mt-1">p. {p.page}</p>}
-                  <button
-                    onClick={() => deletePassage(p.id)}
-                    className="absolute top-3 right-3 text-xs text-stone-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    삭제
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* 필사 추가 폼 */}
-          <div className="space-y-2">
+          {/* 첫 문장 */}
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-stone-600">📖 첫 문장</label>
             <textarea
-              value={passageContent}
-              onChange={(e) => setPassageContent(e.target.value)}
-              placeholder="밑줄 그은 구절을 입력하세요…"
+              value={firstSentence}
+              onChange={(e) => setFirstSentence(e.target.value)}
+              placeholder="책의 첫 문장을 입력하세요"
               rows={3}
               className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-stone-300"
             />
-            <div className="flex gap-2">
-              <input
-                type="number"
-                value={passagePage}
-                onChange={(e) => setPassagePage(e.target.value)}
-                placeholder="페이지 (선택)"
-                className="w-32 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
-              />
-              <button
-                onClick={addPassage}
-                disabled={addingPassage || !passageContent.trim()}
-                className="flex-1 bg-stone-100 text-stone-700 py-2 rounded-xl text-sm disabled:opacity-50 hover:bg-stone-200 transition-colors"
-              >
-                {addingPassage ? "저장 중…" : "+ 필사 추가"}
-              </button>
-            </div>
           </div>
         </div>
+
+        {/* 오른쪽: 필사 + 마지막 문장 */}
+        <div className="mt-8 lg:mt-0 pt-8 lg:pt-0 border-t lg:border-t-0 border-stone-100 space-y-6">
+          <div className="space-y-3">
+            <h2 className="text-sm font-medium text-stone-600">✍️ 필사 ({passages.length})</h2>
+
+            {passages.length > 0 && (
+              <div className="space-y-2">
+                {passages.map((p) => (
+                  <div key={p.id} className="bg-stone-50 rounded-xl border border-stone-100 p-3 relative group">
+                    <p className="text-stone-700 text-sm leading-relaxed whitespace-pre-wrap pr-8">{p.content}</p>
+                    {p.page && <p className="text-xs text-stone-400 mt-1">p. {p.page}</p>}
+                    <button
+                      onClick={() => deletePassage(p.id)}
+                      className="absolute top-3 right-3 text-xs text-stone-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 필사 추가 폼 */}
+            <div className="space-y-2">
+              <textarea
+                value={passageContent}
+                onChange={(e) => setPassageContent(e.target.value)}
+                placeholder="밑줄 그은 구절을 입력하세요…"
+                rows={3}
+                className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-stone-300"
+              />
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  value={passagePage}
+                  onChange={(e) => setPassagePage(e.target.value)}
+                  placeholder="페이지 (선택)"
+                  className="w-32 border border-stone-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+                />
+                <button
+                  onClick={addPassage}
+                  disabled={addingPassage || !passageContent.trim()}
+                  className="flex-1 bg-stone-100 text-stone-700 py-2 rounded-xl text-sm disabled:opacity-50 hover:bg-stone-200 transition-colors"
+                >
+                  {addingPassage ? "저장 중…" : "+ 필사 추가"}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 마지막 문장 */}
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-stone-600">📖 마지막 문장</label>
+            <textarea
+              value={lastSentence}
+              onChange={(e) => setLastSentence(e.target.value)}
+              placeholder="책의 마지막 문장을 입력하세요"
+              rows={3}
+              className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-stone-300"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 저장 / 취소 + 삭제 */}
+      <div className="mt-8 pt-6 border-t border-stone-100 space-y-3">
+        <div className="flex gap-3">
+          <button
+            onClick={save}
+            disabled={saving}
+            className="flex-1 bg-stone-800 text-white py-3 rounded-xl text-sm font-medium disabled:opacity-50 hover:bg-stone-700 transition-colors"
+          >
+            {saving ? "저장 중…" : "저장하기"}
+          </button>
+          <button
+            onClick={() => router.back()}
+            className="px-6 py-3 rounded-xl text-sm text-stone-500 border border-stone-200 hover:bg-stone-50 transition-colors"
+          >
+            취소
+          </button>
+        </div>
+        <button
+          onClick={deleteBook}
+          disabled={deletingBook}
+          className="w-full py-3 rounded-xl text-sm text-red-400 border border-red-100 hover:bg-red-50 transition-colors disabled:opacity-50"
+        >
+          {deletingBook ? "삭제 중…" : "책 삭제"}
+        </button>
       </div>
     </div>
   );
