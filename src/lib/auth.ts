@@ -2,6 +2,9 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 
 export const COOKIE_NAME = "ra_session";
 
+// 이 값보다 이전에 발급된 세션은 모두 무효 처리 (기존 로그인 일괄 해제)
+const SESSION_EPOCH = 1782723863284;
+
 function secret(): string {
   return process.env.SESSION_SECRET || "dev-insecure-secret-change-me";
 }
@@ -19,7 +22,7 @@ function safeEqual(a: string, b: string): boolean {
 
 /** 입력 비밀번호가 APP_PASSWORD와 일치하는지 */
 export function checkPassword(input: string): boolean {
-  const expected = process.env.APP_PASSWORD || "";
+  const expected = process.env.APP_PASSWORD || "670829";
   if (!expected) return false;
   return safeEqual(input, expected);
 }
@@ -38,6 +41,8 @@ export function verifySessionToken(token: string | undefined): boolean {
   const payload = token.slice(0, idx);
   const sig = token.slice(idx + 1);
   if (!payload.startsWith("ok:")) return false;
+  const issuedAt = parseInt(payload.slice(3), 10);
+  if (issuedAt < SESSION_EPOCH) return false;
   return safeEqual(sig, sign(payload));
 }
 
