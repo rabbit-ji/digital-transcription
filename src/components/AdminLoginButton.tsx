@@ -41,20 +41,20 @@ export default function AdminLoginButton({ isAdmin }: Props) {
 
   return (
     <>
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
         {isAdmin ? (
           <button
             onClick={logout}
-            className="text-xs text-stone-300 hover:text-stone-500 transition-colors px-2 py-1"
+            className="text-xs text-black/40 hover:text-black/60 transition-colors px-2 py-1"
           >
             관리자 로그아웃
           </button>
         ) : (
           <button
             onClick={() => setOpen(true)}
-            className="text-xs text-stone-200 hover:text-stone-400 transition-colors px-2 py-1"
+            className="text-xs text-black/40 hover:text-black/60 transition-colors px-2 py-1"
           >
-            관리자
+            관리자 로그인
           </button>
         )}
       </div>

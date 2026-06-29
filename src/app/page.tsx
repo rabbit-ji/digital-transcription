@@ -5,6 +5,7 @@ import { db, ensureSchema } from "@/lib/db";
 import type { Season } from "@/lib/flowers";
 import { COOKIE_NAME, getUserType } from "@/lib/auth";
 import GardenClient from "./GardenClient";
+import AdminLoginButton from "@/components/AdminLoginButton";
 
 interface GardenBook {
   id: number;
@@ -20,6 +21,7 @@ interface GardenBook {
 export default async function HomePage() {
   const cookieStore = await cookies();
   const userType = getUserType(cookieStore.get(COOKIE_NAME)?.value);
+  const isAdmin = userType === "admin";
   await ensureSchema(userType);
 
   let books: GardenBook[] = [];
@@ -44,5 +46,10 @@ export default async function HomePage() {
     // DB 오류 시 빈 정원
   }
 
-  return <GardenClient books={books} />;
+  return (
+    <>
+      <GardenClient books={books} />
+      <AdminLoginButton isAdmin={isAdmin} />
+    </>
+  );
 }
