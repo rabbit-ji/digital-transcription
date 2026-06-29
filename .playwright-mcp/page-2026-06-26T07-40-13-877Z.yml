@@ -1,0 +1,8 @@
+- generic [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e3]:
+      - heading "독서 정원" [level=1] [ref=e4]
+      - paragraph [ref=e5]: 나만의 필사 아카이브에 들어가요
+      - textbox "비밀번호" [active] [ref=e6]
+      - button "들어가기" [ref=e7]
+  - alert [ref=e8]

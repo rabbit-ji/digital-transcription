@@ -75,7 +75,7 @@ export default function GardenClient({ books, isAdmin }: Props) {
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen flex flex-col"
       style={
         isGarden
           ? { background: "linear-gradient(180deg, #bfdbfe 0%, #d1fae5 45%, #bbf7d0 80%, #6ee7b7 100%)" }
@@ -210,7 +210,7 @@ export default function GardenClient({ books, isAdmin }: Props) {
         </div>
       ) : isGarden ? (
         /* 정원 모드 (B) - 꽃들이 정원에 자유롭게 펼쳐진 뷰 */
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 pb-20">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 pb-6 w-full">
           <div className="flex flex-wrap justify-center gap-5 sm:gap-8">
             {books.map((book, i) => (
               <Link
@@ -235,7 +235,7 @@ export default function GardenClient({ books, isAdmin }: Props) {
             ))}
           </div>
           {/* 정원 바닥 장식 */}
-          <div className="mt-16 flex justify-center">
+          <div className="mt-8 flex justify-center">
             <span className="text-2xl opacity-20 select-none tracking-widest">
               🌿 🌱 🌿 🌱 🌿 🌱 🌿 🌱 🌿
             </span>
@@ -277,7 +277,9 @@ export default function GardenClient({ books, isAdmin }: Props) {
         </div>
       )}
 
-      <AdminLoginButton isAdmin={isAdmin} />
+      <div className="mt-auto">
+        <AdminLoginButton isAdmin={isAdmin} />
+      </div>
     </div>
   );
 }

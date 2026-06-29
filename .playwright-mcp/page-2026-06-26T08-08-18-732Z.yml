@@ -1,0 +1,69 @@
+- generic [active] [ref=e1]:
+  - alert [ref=e76]
+  - generic [ref=e80]:
+    - generic [ref=e82]:
+      - generic [ref=e83]:
+        - heading "생각의 정원" [level=1] [ref=e84]
+        - paragraph [ref=e85]: 소감을 쓴 책마다 꽃 한 송이
+        - generic [ref=e86]: 9권의 책
+      - navigation [ref=e87]:
+        - link "책 목록" [ref=e88] [cursor=pointer]:
+          - /url: /books
+        - link "인용 사전" [ref=e89] [cursor=pointer]:
+          - /url: /dictionary
+    - link "📖 오늘 읽은 책을 기록해볼까요? →" [ref=e91] [cursor=pointer]:
+      - /url: /books/new
+      - generic [ref=e92]: 📖
+      - generic [ref=e93]: 오늘 읽은 책을 기록해볼까요?
+      - generic [ref=e94]: →
+    - generic [ref=e96]:
+      - button "🌿 정원" [ref=e97]
+      - button "☰ 목록" [ref=e98]
+    - generic [ref=e99]:
+      - generic [ref=e100]:
+        - link "🪻 팬지 1984" [ref=e101] [cursor=pointer]:
+          - /url: /books/15
+          - generic "팬지 — 1984" [ref=e102]: 🪻
+          - paragraph [ref=e103]: 팬지
+          - paragraph [ref=e104]: "1984"
+        - link "🌻 메리골드 물고기는 존재하지 않는다 (상실, 사랑 그리고 숨어 있는 삶의 질서에 관한 이야기)" [ref=e105] [cursor=pointer]:
+          - /url: /books/16
+          - generic "메리골드 — 물고기는 존재하지 않는다 (상실, 사랑 그리고 숨어 있는 삶의 질서에 관한 이야기)" [ref=e106]: 🌻
+          - paragraph [ref=e107]: 메리골드
+          - paragraph [ref=e108]: 물고기는 존재하지 않는다 (상실, 사랑 그리고 숨어 있는 삶의 질서에 관한 이야기)
+        - link "🌺 맨드라미 구의 증명 (최진영 소설)" [ref=e109] [cursor=pointer]:
+          - /url: /books/18
+          - generic "맨드라미 — 구의 증명 (최진영 소설)" [ref=e110]: 🌺
+          - paragraph [ref=e111]: 맨드라미
+          - paragraph [ref=e112]: 구의 증명 (최진영 소설)
+        - link "🌹 장미 하버드 사랑학 수업 (사랑의 시작과 끝에서 불안한 당신에게)" [ref=e113] [cursor=pointer]:
+          - /url: /books/19
+          - generic "장미 — 하버드 사랑학 수업 (사랑의 시작과 끝에서 불안한 당신에게)" [ref=e114]: 🌹
+          - paragraph [ref=e115]: 장미
+          - paragraph [ref=e116]: 하버드 사랑학 수업 (사랑의 시작과 끝에서 불안한 당신에게)
+        - link "🌸 봉숭아 이방인 (1957년 노벨문학상 수상작가)" [ref=e117] [cursor=pointer]:
+          - /url: /books/20
+          - generic "봉숭아 — 이방인 (1957년 노벨문학상 수상작가)" [ref=e118]: 🌸
+          - paragraph [ref=e119]: 봉숭아
+          - paragraph [ref=e120]: 이방인 (1957년 노벨문학상 수상작가)
+        - link "🪷 나팔꽃 바깥은 여름 (김애란 소설)" [ref=e121] [cursor=pointer]:
+          - /url: /books/21
+          - generic "나팔꽃 — 바깥은 여름 (김애란 소설)" [ref=e122]: 🪷
+          - paragraph [ref=e123]: 나팔꽃
+          - paragraph [ref=e124]: 바깥은 여름 (김애란 소설)
+        - link "🌷 패랭이꽃 청춘의 독서(특별증보판) (세상을 바꾼 위험하고 위대한 생각들)" [ref=e125] [cursor=pointer]:
+          - /url: /books/3
+          - generic "패랭이꽃 — 청춘의 독서(특별증보판) (세상을 바꾼 위험하고 위대한 생각들)" [ref=e126]: 🌷
+          - paragraph [ref=e127]: 패랭이꽃
+          - paragraph [ref=e128]: 청춘의 독서(특별증보판) (세상을 바꾼 위험하고 위대한 생각들)
+        - link "🌼 국화 하버드 논리학 강의 (성공을 이끄는 논리적 사고의 힘)" [ref=e129] [cursor=pointer]:
+          - /url: /books/5
+          - generic "국화 — 하버드 논리학 강의 (성공을 이끄는 논리적 사고의 힘)" [ref=e130]: 🌼
+          - paragraph [ref=e131]: 국화
+          - paragraph [ref=e132]: 하버드 논리학 강의 (성공을 이끄는 논리적 사고의 힘)
+        - link "🌸 봉숭아 칵테일, 러브, 좀비 (리커버)" [ref=e133] [cursor=pointer]:
+          - /url: /books/17
+          - generic "봉숭아 — 칵테일, 러브, 좀비 (리커버)" [ref=e134]: 🌸
+          - paragraph [ref=e135]: 봉숭아
+          - paragraph [ref=e136]: 칵테일, 러브, 좀비 (리커버)
+      - generic [ref=e138]: 🌿 🌱 🌿 🌱 🌿 🌱 🌿 🌱 🌿
