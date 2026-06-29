@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { Season } from "@/lib/flowers";
+import AdminLoginButton from "@/components/AdminLoginButton";
 
 interface GardenBook {
   id: number;
@@ -275,6 +276,8 @@ export default function GardenClient({ books, isAdmin }: Props) {
           </div>
         </div>
       )}
+
+      <AdminLoginButton isAdmin={isAdmin} />
     </div>
   );
 }
