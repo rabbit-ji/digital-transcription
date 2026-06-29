@@ -15,6 +15,7 @@ interface GardenBook {
   flower_emoji: string;
   flower_reason: string;
   recorded_at: string;
+  visitor_name: string | null;
 }
 
 export default async function HomePage() {
@@ -26,7 +27,7 @@ export default async function HomePage() {
   let books: GardenBook[] = [];
   try {
     const result = await db(userType).execute(`
-      SELECT id, title, flower_name, flower_meaning, flower_season, flower_emoji, flower_reason, recorded_at
+      SELECT id, title, flower_name, flower_meaning, flower_season, flower_emoji, flower_reason, recorded_at, visitor_name
       FROM ${tableName(userType, "books")}
       WHERE flower_name IS NOT NULL
       ORDER BY recorded_at ASC
@@ -40,6 +41,7 @@ export default async function HomePage() {
       flower_emoji: String(r.flower_emoji),
       flower_reason: String(r.flower_reason),
       recorded_at: String(r.recorded_at),
+      visitor_name: r.visitor_name == null ? null : String(r.visitor_name),
     }));
   } catch {
     // DB 오류 시 빈 정원

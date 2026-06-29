@@ -14,11 +14,19 @@ interface GardenBook {
   flower_emoji: string;
   flower_reason: string;
   recorded_at: string;
+  visitor_name: string | null;
 }
 
 interface Props {
   books: GardenBook[];
   isAdmin: boolean;
+}
+
+/** 방문자 이름이 있으면 그대로, 없으면 작성월 기준 'n월의 누군가' */
+function visitorLabel(name: string | null, recordedAt: string): string {
+  if (name && name.trim()) return name.trim();
+  const month = Number(recordedAt.slice(5, 7));
+  return month >= 1 && month <= 12 ? `${month}월의 누군가` : "누군가";
 }
 
 const SEASON_ORDER: Season[] = ["봄", "여름", "가을", "겨울"];
@@ -90,11 +98,11 @@ export default function GardenClient({ books, isAdmin }: Props) {
               생각의 정원
             </h1>
             <p className={`text-sm mt-1 ${isGarden ? "text-emerald-700/80" : "text-stone-400"}`}>
-              소감을 쓴 책마다 꽃 한 송이
+              모두 함께 가꾸는 필사 정원
             </p>
             {totalCount > 0 && (
               <span className={`text-xs mt-0.5 block ${isGarden ? "text-emerald-600/70" : "text-stone-400"}`}>
-                {totalCount}권의 책
+                {totalCount}송이 꽃이 피어있어요
               </span>
             )}
           </div>
@@ -150,10 +158,19 @@ export default function GardenClient({ books, isAdmin }: Props) {
           }`}
         >
           <span className="text-base">📖</span>
-          <span>오늘 읽은 책을 기록해볼까요?</span>
+          <span>당신의 필사도 한 송이 보태보세요</span>
           <span className="ml-auto opacity-40 text-xs">→</span>
         </Link>
       </div>
+
+      {/* 방문자 안내 */}
+      {totalCount > 0 && (
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 pb-3 w-full">
+          <p className={`text-xs text-center ${isGarden ? "text-emerald-700/70" : "text-stone-400"}`}>
+            🌸 여기 핀 꽃을 눌러 다른 사람의 필사를 구경해보세요
+          </p>
+        </div>
+      )}
 
       {/* 뷰 토글 */}
       <div className="max-w-2xl mx-auto px-4 sm:px-6 pb-4 w-full">
@@ -193,18 +210,18 @@ export default function GardenClient({ books, isAdmin }: Props) {
           >
             <p className="text-4xl mb-3">🌱</p>
             <p className={`text-sm ${isGarden ? "text-emerald-800" : "text-stone-500"}`}>
-              아직 정원이 비어 있어요.
+              아직 아무도 꽃을 남기지 않았어요.
             </p>
             <p className={`text-xs mt-1 ${isGarden ? "text-emerald-600/70" : "text-stone-400"}`}>
-              책 소감을 남기면 꽃이 피어납니다.
+              첫 필사를 남기면, 모두가 보는 첫 꽃이 피어나요.
             </p>
             <Link
-              href="/books"
+              href="/books/new"
               className={`text-xs underline mt-3 inline-block ${
                 isGarden ? "text-emerald-700" : "text-stone-600"
               }`}
             >
-              나의 책 목록으로
+              필사 남기기
             </Link>
           </div>
         </div>
@@ -231,6 +248,9 @@ export default function GardenClient({ books, isAdmin }: Props) {
                 <p className="text-[10px] text-emerald-700/70 text-center line-clamp-1 max-w-[76px] leading-snug mt-0.5">
                   {book.title}
                 </p>
+                <span className="mt-1 inline-block px-1.5 py-0.5 rounded-full bg-white/50 text-emerald-700/80 text-[9px] leading-none max-w-[76px] truncate">
+                  {visitorLabel(book.visitor_name, book.recorded_at)}
+                </span>
               </Link>
             ))}
           </div>
@@ -239,6 +259,15 @@ export default function GardenClient({ books, isAdmin }: Props) {
             <span className="text-2xl opacity-20 select-none tracking-widest">
               🌿 🌱 🌿 🌱 🌿 🌱 🌿 🌱 🌿
             </span>
+          </div>
+          {/* 마무리 유도 */}
+          <div className="mt-6 text-center">
+            <Link
+              href="/books/new"
+              className="text-xs text-emerald-800/80 hover:text-emerald-950 transition-colors"
+            >
+              여기까지가 지금까지 모인 필사예요. 당신 차례예요 →
+            </Link>
           </div>
         </div>
       ) : (
@@ -262,6 +291,9 @@ export default function GardenClient({ books, isAdmin }: Props) {
                         <p className="text-xs font-medium text-stone-700 line-clamp-1">{book.flower_name}</p>
                         <p className="text-xs text-stone-400 mt-0.5 line-clamp-1">{book.flower_meaning}</p>
                         <p className="text-xs text-stone-500 mt-2 font-medium line-clamp-1">{book.title}</p>
+                        <span className="mt-1.5 inline-block px-2 py-0.5 rounded-full bg-stone-100 text-stone-500 text-[10px] max-w-full truncate">
+                          {visitorLabel(book.visitor_name, book.recorded_at)}
+                        </span>
                         {book.flower_reason && (
                           <p className="text-xs text-stone-400 mt-1 line-clamp-2 leading-relaxed">
                             {book.flower_reason}
