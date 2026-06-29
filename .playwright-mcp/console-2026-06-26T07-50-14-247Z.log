@@ -1,3 +1,0 @@
-[    1167ms] [VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "new-password"): (More info: https://goo.gl/9p2vKq) %o @ https://reading-archive.onrender.com/login:0
-[   20251ms] [LOG] onChange started @ chrome-extension://dehobbhellcfbmcaeppgfjhnldeimdph/ContentScript.js:5
-[   20252ms] [LOG] onChange completed @ chrome-extension://dehobbhellcfbmcaeppgfjhnldeimdph/ContentScript.js:5
