@@ -83,7 +83,7 @@ export default function GardenClient({ books, isAdmin }: Props) {
       }
     >
       {/* 헤더 */}
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-5 pb-3">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-5 pb-3 w-full">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h1 className={`text-2xl font-semibold ${isGarden ? "text-emerald-900" : "text-stone-800"}`}>
@@ -140,7 +140,7 @@ export default function GardenClient({ books, isAdmin }: Props) {
       </div>
 
       {/* 숏컷 - 새 책 추가 */}
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 pb-3">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 pb-3 w-full">
         <Link
           href="/books/new"
           className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl border text-sm transition-all ${
@@ -156,7 +156,7 @@ export default function GardenClient({ books, isAdmin }: Props) {
       </div>
 
       {/* 뷰 토글 */}
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 pb-4">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 pb-4 w-full">
         <div
           className={`inline-flex gap-1 p-1 rounded-xl ${isGarden ? "bg-white/30" : "bg-stone-100"}`}
         >
@@ -185,7 +185,7 @@ export default function GardenClient({ books, isAdmin }: Props) {
 
       {/* 콘텐츠 */}
       {totalCount === 0 ? (
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 pb-12">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 pb-12 w-full">
           <div
             className={`rounded-2xl p-8 text-center ${
               isGarden ? "bg-white/40 border border-emerald-100" : "bg-stone-50 border border-stone-100"
@@ -243,7 +243,7 @@ export default function GardenClient({ books, isAdmin }: Props) {
         </div>
       ) : (
         /* 카드 모드 (A) - 계절별 카드 그리드 */
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 pb-12">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 pb-12 w-full">
           <div className="space-y-6">
             {SEASON_ORDER.map((season) => {
               const seasonBooks = bySeason[season];
