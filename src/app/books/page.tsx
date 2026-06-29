@@ -24,7 +24,7 @@ export default async function BooksPage() {
           <Link href="/" className="text-xs text-stone-400 hover:text-stone-600 transition-colors flex-shrink-0">
             ← 홈
           </Link>
-          <h1 className="text-xl sm:text-2xl font-semibold text-stone-800 truncate">나의 책 목록</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold text-stone-800 truncate">{isAdmin ? "나의 책 목록" : "책 목록"}</h1>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
           {isAdmin && <SyncButton />}
