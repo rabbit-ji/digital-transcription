@@ -1,9 +1,14 @@
 import { NextResponse, after } from "next/server";
+import { cookies } from "next/headers";
 import { db, ensureSchema, nowIso } from "@/lib/db";
+import { COOKIE_NAME, getUserType } from "@/lib/auth";
 import { embedPassage, extractTags } from "@/lib/gemini";
 
 export async function POST(req: Request) {
-  await ensureSchema();
+  const cookieStore = await cookies();
+  // after() 클로저 안에서도 쓸 수 있도록 미리 캡처
+  const userType = getUserType(cookieStore.get(COOKIE_NAME)?.value);
+  await ensureSchema(userType);
   const body = await req.json().catch(() => ({}));
   const { book_id, content, page } = body;
   if (!book_id || !content?.trim()) {
@@ -13,13 +18,13 @@ export async function POST(req: Request) {
   const trimmed = content.trim();
 
   // DB에 먼저 저장 (임베딩 없이)
-  const result = await db().execute({
+  const result = await db(userType).execute({
     sql: "INSERT INTO passages (book_id, content, page, created_at) VALUES (?, ?, ?, ?)",
     args: [book_id, trimmed, page ?? null, now],
   });
   const passageId = Number(result.lastInsertRowid);
 
-  const passage = await db().execute({
+  const passage = await db(userType).execute({
     sql: "SELECT id, content, page, created_at FROM passages WHERE id = ?",
     args: [passageId],
   });
@@ -33,7 +38,7 @@ export async function POST(req: Request) {
       ]);
 
       if (vec.length === 768) {
-        await db().execute({
+        await db(userType).execute({
           sql: "UPDATE passages SET embedding = vector(?) WHERE id = ?",
           args: [`[${vec.join(",")}]`, passageId],
         });
@@ -42,16 +47,16 @@ export async function POST(req: Request) {
       for (const tag of tags) {
         const tagName = tag.trim();
         if (!tagName) continue;
-        await db().execute({
+        await db(userType).execute({
           sql: "INSERT OR IGNORE INTO tags (name) VALUES (?)",
           args: [tagName],
         });
-        const tagRow = await db().execute({
+        const tagRow = await db(userType).execute({
           sql: "SELECT id FROM tags WHERE name = ?",
           args: [tagName],
         });
         if (tagRow.rows[0]) {
-          await db().execute({
+          await db(userType).execute({
             sql: "INSERT OR IGNORE INTO passage_tags (passage_id, tag_id) VALUES (?, ?)",
             args: [passageId, tagRow.rows[0].id],
           });

@@ -1,22 +1,26 @@
 import { NextResponse, after } from "next/server";
 import type { InValue } from "@libsql/client";
+import { cookies } from "next/headers";
 import { db, ensureSchema, nowIso } from "@/lib/db";
+import { COOKIE_NAME, getUserType } from "@/lib/auth";
 import { matchFlower } from "@/lib/gemini";
 import { getSeason, getFlowersBySeason } from "@/lib/flowers";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(_req: Request, { params }: Params) {
-  await ensureSchema();
+  const cookieStore = await cookies();
+  const userType = getUserType(cookieStore.get(COOKIE_NAME)?.value);
+  await ensureSchema(userType);
   const { id } = await params;
-  const book = await db().execute({
+  const book = await db(userType).execute({
     sql: "SELECT * FROM books WHERE id = ?",
     args: [id],
   });
   if (!book.rows[0]) {
     return NextResponse.json({ error: "책을 찾을 수 없습니다" }, { status: 404 });
   }
-  const passages = await db().execute({
+  const passages = await db(userType).execute({
     sql: "SELECT id, content, page, created_at FROM passages WHERE book_id = ? ORDER BY created_at ASC",
     args: [id],
   });
@@ -24,7 +28,9 @@ export async function GET(_req: Request, { params }: Params) {
 }
 
 export async function PATCH(req: Request, { params }: Params) {
-  await ensureSchema();
+  const cookieStore = await cookies();
+  const userType = getUserType(cookieStore.get(COOKIE_NAME)?.value);
+  await ensureSchema(userType);
   const { id } = await params;
   const body = await req.json().catch(() => ({}));
 
@@ -39,7 +45,7 @@ export async function PATCH(req: Request, { params }: Params) {
 
   if (shouldRematching) {
     try {
-      const bookRow = await db().execute({
+      const bookRow = await db(userType).execute({
         sql: "SELECT review, recorded_at FROM books WHERE id = ?",
         args: [id],
       });
@@ -61,7 +67,7 @@ export async function PATCH(req: Request, { params }: Params) {
     }
   }
 
-  const allowed = ["title", "author", "review", "recorded_at", "flower_name", "flower_meaning", "flower_season", "flower_emoji", "flower_reason", "first_sentence", "last_sentence"];
+  const allowed = ["title", "author", "review", "recorded_at", "flower_name", "flower_meaning", "flower_season", "flower_emoji", "flower_reason", "first_sentence", "last_sentence", "visitor_name"];
   const updates: string[] = [];
   const args: InValue[] = [];
   for (const key of allowed) {
@@ -78,11 +84,11 @@ export async function PATCH(req: Request, { params }: Params) {
   updates.push("updated_at = ?");
   args.push(nowIso());
   args.push(id);
-  await db().execute({
+  await db(userType).execute({
     sql: `UPDATE books SET ${updates.join(", ")} WHERE id = ?`,
     args,
   });
-  const book = await db().execute({
+  const book = await db(userType).execute({
     sql: "SELECT * FROM books WHERE id = ?",
     args: [id],
   });
@@ -115,8 +121,10 @@ export async function PATCH(req: Request, { params }: Params) {
 }
 
 export async function DELETE(_req: Request, { params }: Params) {
-  await ensureSchema();
+  const cookieStore = await cookies();
+  const userType = getUserType(cookieStore.get(COOKIE_NAME)?.value);
+  await ensureSchema(userType);
   const { id } = await params;
-  await db().execute({ sql: "DELETE FROM books WHERE id = ?", args: [id] });
+  await db(userType).execute({ sql: "DELETE FROM books WHERE id = ?", args: [id] });
   return NextResponse.json({ ok: true });
 }

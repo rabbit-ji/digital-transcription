@@ -8,6 +8,7 @@ interface BookData {
   first_sentence: string | null;
   last_sentence: string | null;
   recorded_at: string | null;
+  visitor_name: string | null;
 }
 
 interface Passage {
@@ -26,6 +27,8 @@ export default function BookEditPage({ params }: { params: Promise<{ id: string 
   const [firstSentence, setFirstSentence] = useState("");
   const [lastSentence, setLastSentence] = useState("");
   const [recordedAt, setRecordedAt] = useState("");
+  const [visitorName, setVisitorName] = useState("");
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingBook, setDeletingBook] = useState(false);
@@ -35,6 +38,13 @@ export default function BookEditPage({ params }: { params: Promise<{ id: string 
   const [passageContent, setPassageContent] = useState("");
   const [passagePage, setPassagePage] = useState("");
   const [addingPassage, setAddingPassage] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/user")
+      .then((r) => r.json())
+      .then((data) => setIsAdmin(data.isAdmin ?? false))
+      .catch(() => setIsAdmin(false));
+  }, []);
 
   useEffect(() => {
     fetch(`/api/books/${id}`)
@@ -47,6 +57,7 @@ export default function BookEditPage({ params }: { params: Promise<{ id: string 
         setFirstSentence(book.first_sentence ?? "");
         setLastSentence(book.last_sentence ?? "");
         setRecordedAt(book.recorded_at ? String(book.recorded_at).substring(0, 10) : "");
+        setVisitorName(book.visitor_name ?? "");
         setPassages(data.passages as Passage[]);
       })
       .catch(() => setError("책 정보를 불러오지 못했어요"))
@@ -65,6 +76,7 @@ export default function BookEditPage({ params }: { params: Promise<{ id: string 
           first_sentence: firstSentence,
           last_sentence: lastSentence,
           recorded_at: recordedAt || null,
+          visitor_name: visitorName.trim() || null,
         }),
       });
       const data = await res.json();
@@ -139,6 +151,20 @@ export default function BookEditPage({ params }: { params: Promise<{ id: string 
       <div className="lg:grid lg:grid-cols-2 lg:gap-12">
         {/* 왼쪽: 메타데이터 폼 + 액션 */}
         <div className="space-y-6">
+          {/* 방문자 이름 (게스트 또는 기존 값 있을 때) */}
+          {(isAdmin === false || visitorName) && (
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-stone-600">👤 방문자 이름</label>
+              <input
+                type="text"
+                value={visitorName}
+                onChange={(e) => setVisitorName(e.target.value)}
+                placeholder="이름을 남겨보세요 (선택)"
+                className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+              />
+            </div>
+          )}
+
           {/* 등록일자 */}
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-stone-600">📅 등록일자</label>

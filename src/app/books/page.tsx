@@ -1,12 +1,17 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { db, ensureSchema } from "@/lib/db";
 import { SyncButton } from "@/app/garden/SyncButton";
+import { COOKIE_NAME, getUserType } from "@/lib/auth";
 
 export default async function BooksPage() {
-  await ensureSchema();
-  const result = await db().execute(
+  const cookieStore = await cookies();
+  const userType = getUserType(cookieStore.get(COOKIE_NAME)?.value);
+  const isAdmin = userType === "admin";
+  await ensureSchema(userType);
+  const result = await db(userType).execute(
     "SELECT id, title, author, cover_url, flower_emoji, flower_name, recorded_at, created_at FROM books ORDER BY COALESCE(recorded_at, created_at) DESC"
   );
   const books = result.rows;
@@ -21,7 +26,7 @@ export default async function BooksPage() {
           <h1 className="text-xl sm:text-2xl font-semibold text-stone-800 truncate">나의 책 목록</h1>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0">
-          <SyncButton />
+          {isAdmin && <SyncButton />}
           <Link
             href="/books/new"
             className="bg-stone-800 text-white px-3 sm:px-4 py-2 rounded-xl text-sm hover:bg-stone-700 transition-colors"

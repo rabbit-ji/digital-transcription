@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { db } from "@/lib/db";
+import { COOKIE_NAME, getUserType } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
+  const cookieStore = await cookies();
+  const userType = getUserType(cookieStore.get(COOKIE_NAME)?.value);
+
   const passageIdStr = request.nextUrl.searchParams.get("passage_id");
   if (!passageIdStr) {
     return NextResponse.json({ similar: [] });
@@ -12,7 +17,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ similar: [] });
   }
 
-  const sourceResult = await db().execute({
+  const sourceResult = await db(userType).execute({
     sql: "SELECT book_id FROM passages WHERE id = ?",
     args: [passageId],
   });
@@ -22,7 +27,7 @@ export async function GET(request: NextRequest) {
   const sourceBookId = Number(sourceResult.rows[0].book_id);
 
   try {
-    const result = await db().execute({
+    const result = await db(userType).execute({
       sql: `
         SELECT p.id, p.content, p.page, p.book_id,
                b.title AS book_title, vt.distance

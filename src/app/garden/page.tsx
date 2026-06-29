@@ -1,9 +1,11 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { db, ensureSchema } from "@/lib/db";
 import type { Season } from "@/lib/flowers";
 import { SyncButton } from "./SyncButton";
+import { COOKIE_NAME, getUserType } from "@/lib/auth";
 
 interface GardenBook {
   id: number;
@@ -31,11 +33,14 @@ const SEASON_LABEL: Record<Season, string> = {
 };
 
 export default async function GardenPage() {
-  await ensureSchema();
+  const cookieStore = await cookies();
+  const userType = getUserType(cookieStore.get(COOKIE_NAME)?.value);
+  const isAdmin = userType === "admin";
+  await ensureSchema(userType);
 
   let books: GardenBook[] = [];
   try {
-    const result = await db().execute(`
+    const result = await db(userType).execute(`
       SELECT id, title, flower_name, flower_meaning, flower_season, flower_emoji, flower_reason, recorded_at
       FROM books
       WHERE flower_name IS NOT NULL
@@ -121,7 +126,7 @@ export default async function GardenPage() {
         <Link href="/" className="text-xs text-stone-400 hover:text-stone-600 transition-colors">
           ← 홈으로
         </Link>
-        <SyncButton />
+        {isAdmin && <SyncButton />}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 interface NaverBook {
@@ -27,6 +27,8 @@ export default function NewBookPage() {
   const [searching, setSearching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [visitorName, setVisitorName] = useState("");
 
   const [recordedAt, setRecordedAt] = useState("");
   const [review, setReview] = useState("");
@@ -35,6 +37,13 @@ export default function NewBookPage() {
   const [passages, setPassages] = useState<PendingPassage[]>([]);
   const [passageContent, setPassageContent] = useState("");
   const [passagePage, setPassagePage] = useState("");
+
+  useEffect(() => {
+    fetch("/api/user")
+      .then((r) => r.json())
+      .then((data) => setIsAdmin(data.isAdmin ?? false))
+      .catch(() => setIsAdmin(false));
+  }, []);
 
   async function handleSearch() {
     if (!query.trim()) return;
@@ -89,8 +98,8 @@ export default function NewBookPage() {
     setError("");
     try {
       const bookBody = selected
-        ? { title: selected.title, author: selected.author, isbn: selected.isbn, cover_url: selected.image }
-        : { title: query.trim() };
+        ? { title: selected.title, author: selected.author, isbn: selected.isbn, cover_url: selected.image, visitor_name: visitorName.trim() || null }
+        : { title: query.trim(), visitor_name: visitorName.trim() || null };
       const bookRes = await fetch("/api/books", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -176,6 +185,19 @@ export default function NewBookPage() {
                   <p className="text-sm font-medium text-stone-800 line-clamp-2">{selected.title}</p>
                   {selected.author && <p className="text-xs text-stone-500 mt-0.5">{selected.author}</p>}
                 </div>
+              </div>
+            )}
+
+            {isAdmin === false && (
+              <div className="space-y-1.5">
+                <label className="block text-sm font-medium text-stone-600">👤 방문자 이름</label>
+                <input
+                  type="text"
+                  value={visitorName}
+                  onChange={(e) => setVisitorName(e.target.value)}
+                  placeholder="이름을 남겨보세요 (선택)"
+                  className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+                />
               </div>
             )}
 

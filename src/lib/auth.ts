@@ -40,3 +40,8 @@ export function verifySessionToken(token: string | undefined): boolean {
   if (!payload.startsWith("ok:")) return false;
   return safeEqual(sig, sign(payload));
 }
+
+/** 토큰으로 유저 타입 판별 */
+export function getUserType(token: string | undefined): "admin" | "guest" {
+  return verifySessionToken(token) ? "admin" : "guest";
+}

@@ -1,7 +1,9 @@
 export const dynamic = "force-dynamic";
 
+import { cookies } from "next/headers";
 import { db, ensureSchema } from "@/lib/db";
 import type { Season } from "@/lib/flowers";
+import { COOKIE_NAME, getUserType } from "@/lib/auth";
 import GardenClient from "./GardenClient";
 
 interface GardenBook {
@@ -16,11 +18,13 @@ interface GardenBook {
 }
 
 export default async function HomePage() {
-  await ensureSchema();
+  const cookieStore = await cookies();
+  const userType = getUserType(cookieStore.get(COOKIE_NAME)?.value);
+  await ensureSchema(userType);
 
   let books: GardenBook[] = [];
   try {
-    const result = await db().execute(`
+    const result = await db(userType).execute(`
       SELECT id, title, flower_name, flower_meaning, flower_season, flower_emoji, flower_reason, recorded_at
       FROM books
       WHERE flower_name IS NOT NULL

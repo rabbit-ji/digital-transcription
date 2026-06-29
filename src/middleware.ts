@@ -32,16 +32,14 @@ async function verify(token: string | undefined): Promise<boolean> {
 }
 
 export async function middleware(req: NextRequest) {
+  // 관리자 전용 API만 보호 — 일반 페이지는 게스트도 자유롭게 접근 가능
   const ok = await verify(req.cookies.get(COOKIE_NAME)?.value);
   if (!ok) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/login";
-    url.search = "";
-    return NextResponse.redirect(url);
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/((?!login|api/auth|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/api/admin/:path*"],
 };

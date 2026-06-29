@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS books (
   flower_reason  TEXT,                 -- 왜 이 꽃인지(소감 연결)
   first_sentence TEXT,                 -- 책의 첫 문장
   last_sentence  TEXT,                 -- 책의 마지막 문장
+  visitor_name   TEXT,                 -- 방문자 이름(게스트 방명록)
   recorded_at    TEXT NOT NULL,        -- 필사 시작일(계절 판정 기준)
   created_at     TEXT NOT NULL,
   updated_at     TEXT NOT NULL

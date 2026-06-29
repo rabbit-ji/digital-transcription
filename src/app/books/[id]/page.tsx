@@ -17,6 +17,7 @@ interface Book {
   first_sentence: string | null;
   last_sentence: string | null;
   recorded_at: string | null;
+  visitor_name: string | null;
 }
 
 interface Passage {
@@ -134,6 +135,7 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
         <div className="flex-1 min-w-0">
           <h1 className="text-xl font-semibold text-stone-800">{book.title}</h1>
           {book.author && <p className="text-sm text-stone-500 mt-0.5">{book.author}</p>}
+          {book.visitor_name && <p className="text-xs text-stone-400 mt-0.5">👤 {book.visitor_name}</p>}
           {formattedDate && <p className="text-xs text-stone-400 mt-1">📅 {formattedDate}</p>}
         </div>
         <Link
