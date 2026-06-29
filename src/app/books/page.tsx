@@ -18,7 +18,8 @@ export default async function BooksPage() {
   const books = result.rows;
 
   return (
-    <div className="max-w-2xl mx-auto w-full p-4 sm:p-6 overflow-x-hidden">
+    <div className="min-h-screen flex flex-col">
+      <div className="max-w-2xl mx-auto w-full p-4 sm:p-6 overflow-x-hidden flex-1">
       <div className="flex justify-between items-center mb-6 gap-2">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Link href="/" className="text-xs text-stone-400 hover:text-stone-600 transition-colors flex-shrink-0">
@@ -87,8 +88,11 @@ export default async function BooksPage() {
           ))}
         </div>
       )}
+      </div>
 
-      <AdminLoginButton isAdmin={isAdmin} />
+      <div className="mt-auto">
+        <AdminLoginButton isAdmin={isAdmin} />
+      </div>
     </div>
   );
 }
