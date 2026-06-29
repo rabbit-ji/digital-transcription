@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { db, ensureSchema, tableName } from "@/lib/db";
 import { SyncButton } from "@/app/garden/SyncButton";
 import { COOKIE_NAME, getUserType } from "@/lib/auth";
+import AdminLoginButton from "@/components/AdminLoginButton";
 
 export default async function BooksPage() {
   const cookieStore = await cookies();
@@ -86,6 +87,8 @@ export default async function BooksPage() {
           ))}
         </div>
       )}
+
+      <AdminLoginButton isAdmin={isAdmin} />
     </div>
   );
 }

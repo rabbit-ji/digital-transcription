@@ -48,7 +48,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <GardenClient books={books} />
+      <GardenClient books={books} isAdmin={isAdmin} />
       <AdminLoginButton isAdmin={isAdmin} />
     </>
   );

@@ -17,6 +17,7 @@ interface GardenBook {
 
 interface Props {
   books: GardenBook[];
+  isAdmin: boolean;
 }
 
 const SEASON_ORDER: Season[] = ["봄", "여름", "가을", "겨울"];
@@ -33,7 +34,7 @@ const SEASON_LABEL: Record<Season, string> = {
   겨울: "❄️ 겨울",
 };
 
-export default function GardenClient({ books }: Props) {
+export default function GardenClient({ books, isAdmin }: Props) {
   const router = useRouter();
   const [viewMode, setViewMode] = useState<"garden" | "card">("garden");
   const [syncing, setSyncing] = useState(false);
@@ -115,22 +116,24 @@ export default function GardenClient({ books }: Props) {
                 인용 사전
               </Link>
             </div>
-            <div className="text-right">
-              <button
-                onClick={handleSync}
-                disabled={syncing}
-                className={`text-xs transition-colors disabled:opacity-50 ${
-                  isGarden ? "text-emerald-700/60 hover:text-emerald-900" : "text-stone-400 hover:text-stone-600"
-                }`}
-              >
-                {syncing ? "동기화 중…" : "🔄 꽃 동기화"}
-              </button>
-              {syncResult && (
-                <p className={`text-xs mt-0.5 ${isGarden ? "text-emerald-700/60" : "text-stone-400"}`}>
-                  {syncResult}
-                </p>
-              )}
-            </div>
+            {isAdmin && (
+              <div className="text-right">
+                <button
+                  onClick={handleSync}
+                  disabled={syncing}
+                  className={`text-xs transition-colors disabled:opacity-50 ${
+                    isGarden ? "text-emerald-700/60 hover:text-emerald-900" : "text-stone-400 hover:text-stone-600"
+                  }`}
+                >
+                  {syncing ? "동기화 중…" : "🔄 꽃 동기화"}
+                </button>
+                {syncResult && (
+                  <p className={`text-xs mt-0.5 ${isGarden ? "text-emerald-700/60" : "text-stone-400"}`}>
+                    {syncResult}
+                  </p>
+                )}
+              </div>
+            )}
           </nav>
         </div>
       </div>

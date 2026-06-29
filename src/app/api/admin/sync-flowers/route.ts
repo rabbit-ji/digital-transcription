@@ -1,59 +1,80 @@
 import { NextResponse } from "next/server";
-import { db, ensureSchema } from "@/lib/db";
+import { cookies } from "next/headers";
+import { db, ensureSchema, tableName } from "@/lib/db";
 import { matchFlower } from "@/lib/gemini";
-import { FLOWERS, getSeason, getFlowersBySeason } from "@/lib/flowers";
+import { getSeason, getFlowersBySeason } from "@/lib/flowers";
+import { COOKIE_NAME, getUserType } from "@/lib/auth";
 
-export async function POST() {
-  await ensureSchema();
+type UserType = "admin" | "guest";
 
-  const result = await db().execute(
-    "SELECT id, review, recorded_at, flower_name FROM books"
+interface SyncFailure {
+  userType: UserType;
+  id: number;
+  reason: string;
+}
+
+/**
+ * 한 테이블에서 꽃이 비어있는 책만 골라 새로 부여한다.
+ * 이미 flower_name이 있는 책은 건드리지 않는다(재동기화 금지).
+ */
+async function syncEmptyFlowers(userType: UserType): Promise<{ rematched: number; failed: SyncFailure[] }> {
+  await ensureSchema(userType);
+  const table = tableName(userType, "books");
+
+  const result = await db(userType).execute(
+    `SELECT id, review, recorded_at FROM ${table}
+     WHERE (flower_name IS NULL OR flower_name = '') AND review IS NOT NULL AND TRIM(review) <> ''`
   );
 
-  let synced = 0;
   let rematched = 0;
-  const failed: { id: number; reason: string }[] = [];
+  const failed: SyncFailure[] = [];
 
   for (const row of result.rows) {
     const id = row.id as number;
-    const flowerName = row.flower_name as string | null;
-    const review = row.review as string | null;
+    const review = (row.review as string | null)?.trim();
     const recordedAt = row.recorded_at as string | null;
+    if (!review) continue;
 
-    if (flowerName) {
-      // flower_name 있는 책: flowers.ts 기준으로 emoji, meaning 업데이트
-      const flowerData = FLOWERS.find((f) => f.name === flowerName);
-      if (flowerData) {
-        await db().execute({
-          sql: "UPDATE books SET flower_emoji = ?, flower_meaning = ? WHERE id = ?",
-          args: [flowerData.emoji, flowerData.meaning, id],
+    try {
+      const effectiveDate = recordedAt?.trim() || new Date().toISOString();
+      const season = getSeason(effectiveDate);
+      const candidates = getFlowersBySeason(season);
+      const flower = await matchFlower(review, candidates);
+      if (flower) {
+        await db(userType).execute({
+          sql: `UPDATE ${table}
+                SET flower_name = ?, flower_meaning = ?, flower_season = ?,
+                    flower_emoji = ?, flower_reason = ?
+                WHERE id = ?`,
+          args: [flower.name, flower.meaning, flower.season, flower.emoji, flower.reason, id],
         });
-        synced++;
+        rematched++;
+      } else {
+        failed.push({ userType, id, reason: "AI가 후보 꽃 목록에 없는 이름을 반환했거나 응답이 없음" });
       }
-    } else if (review?.trim()) {
-      // flower_name 없고 review 있는 책: AI 재매칭
-      try {
-        const effectiveDate = recordedAt?.trim() || new Date().toISOString();
-        const season = getSeason(effectiveDate);
-        const candidates = getFlowersBySeason(season);
-        const flower = await matchFlower(review.trim(), candidates);
-        if (flower) {
-          await db().execute({
-            sql: `UPDATE books
-                  SET flower_name = ?, flower_meaning = ?, flower_season = ?,
-                      flower_emoji = ?, flower_reason = ?
-                  WHERE id = ?`,
-            args: [flower.name, flower.meaning, flower.season, flower.emoji, flower.reason, id],
-          });
-          rematched++;
-        } else {
-          failed.push({ id, reason: "AI가 후보 꽃 목록에 없는 이름을 반환했거나 응답이 없음" });
-        }
-      } catch (e) {
-        failed.push({ id, reason: e instanceof Error ? e.message : String(e) });
-      }
+    } catch (e) {
+      failed.push({ userType, id, reason: e instanceof Error ? e.message : String(e) });
     }
   }
 
-  return NextResponse.json({ ok: true, synced, rematched, failed });
+  return { rematched, failed };
+}
+
+export async function POST() {
+  const cookieStore = await cookies();
+  const userType = getUserType(cookieStore.get(COOKIE_NAME)?.value);
+  if (userType !== "admin") {
+    return NextResponse.json({ ok: false, error: "관리자만 사용할 수 있어요" }, { status: 403 });
+  }
+
+  // 관리자가 실행하면 관리자/게스트 데이터 모두 동기화
+  const adminResult = await syncEmptyFlowers("admin");
+  const guestResult = await syncEmptyFlowers("guest");
+
+  return NextResponse.json({
+    ok: true,
+    synced: 0,
+    rematched: adminResult.rematched + guestResult.rematched,
+    failed: [...adminResult.failed, ...guestResult.failed],
+  });
 }
