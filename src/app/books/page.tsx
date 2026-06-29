@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { db, ensureSchema } from "@/lib/db";
+import { db, ensureSchema, tableName } from "@/lib/db";
 import { SyncButton } from "@/app/garden/SyncButton";
 import { COOKIE_NAME, getUserType } from "@/lib/auth";
 
@@ -12,7 +12,7 @@ export default async function BooksPage() {
   const isAdmin = userType === "admin";
   await ensureSchema(userType);
   const result = await db(userType).execute(
-    "SELECT id, title, author, cover_url, flower_emoji, flower_name, recorded_at, created_at FROM books ORDER BY COALESCE(recorded_at, created_at) DESC"
+    `SELECT id, title, author, cover_url, flower_emoji, flower_name, recorded_at, created_at FROM ${tableName(userType, "books")} ORDER BY COALESCE(recorded_at, created_at) DESC`
   );
   const books = result.rows;
 

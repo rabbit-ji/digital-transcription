@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { cookies } from "next/headers";
-import { db, ensureSchema } from "@/lib/db";
+import { db, ensureSchema, tableName } from "@/lib/db";
 import type { Season } from "@/lib/flowers";
 import { COOKIE_NAME, getUserType } from "@/lib/auth";
 import GardenClient from "./GardenClient";
@@ -28,7 +28,7 @@ export default async function HomePage() {
   try {
     const result = await db(userType).execute(`
       SELECT id, title, flower_name, flower_meaning, flower_season, flower_emoji, flower_reason, recorded_at
-      FROM books
+      FROM ${tableName(userType, "books")}
       WHERE flower_name IS NOT NULL
       ORDER BY recorded_at ASC
     `);

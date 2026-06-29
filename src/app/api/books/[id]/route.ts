@@ -1,7 +1,7 @@
 import { NextResponse, after } from "next/server";
 import type { InValue } from "@libsql/client";
 import { cookies } from "next/headers";
-import { db, ensureSchema, nowIso } from "@/lib/db";
+import { db, ensureSchema, nowIso, tableName } from "@/lib/db";
 import { COOKIE_NAME, getUserType } from "@/lib/auth";
 import { matchFlower } from "@/lib/gemini";
 import { getSeason, getFlowersBySeason } from "@/lib/flowers";
@@ -12,16 +12,18 @@ export async function GET(_req: Request, { params }: Params) {
   const cookieStore = await cookies();
   const userType = getUserType(cookieStore.get(COOKIE_NAME)?.value);
   await ensureSchema(userType);
+  const booksTable = tableName(userType, "books");
+  const passagesTable = tableName(userType, "passages");
   const { id } = await params;
   const book = await db(userType).execute({
-    sql: "SELECT * FROM books WHERE id = ?",
+    sql: `SELECT * FROM ${booksTable} WHERE id = ?`,
     args: [id],
   });
   if (!book.rows[0]) {
     return NextResponse.json({ error: "책을 찾을 수 없습니다" }, { status: 404 });
   }
   const passages = await db(userType).execute({
-    sql: "SELECT id, content, page, created_at FROM passages WHERE book_id = ? ORDER BY created_at ASC",
+    sql: `SELECT id, content, page, created_at FROM ${passagesTable} WHERE book_id = ? ORDER BY created_at ASC`,
     args: [id],
   });
   return NextResponse.json({ book: book.rows[0], passages: passages.rows });
@@ -31,6 +33,7 @@ export async function PATCH(req: Request, { params }: Params) {
   const cookieStore = await cookies();
   const userType = getUserType(cookieStore.get(COOKIE_NAME)?.value);
   await ensureSchema(userType);
+  const booksTable = tableName(userType, "books");
   const { id } = await params;
   const body = await req.json().catch(() => ({}));
 
@@ -46,7 +49,7 @@ export async function PATCH(req: Request, { params }: Params) {
   if (shouldRematching) {
     try {
       const bookRow = await db(userType).execute({
-        sql: "SELECT review, recorded_at FROM books WHERE id = ?",
+        sql: `SELECT review, recorded_at FROM ${booksTable} WHERE id = ?`,
         args: [id],
       });
       const effectiveReview =
@@ -85,11 +88,11 @@ export async function PATCH(req: Request, { params }: Params) {
   args.push(nowIso());
   args.push(id);
   await db(userType).execute({
-    sql: `UPDATE books SET ${updates.join(", ")} WHERE id = ?`,
+    sql: `UPDATE ${booksTable} SET ${updates.join(", ")} WHERE id = ?`,
     args,
   });
   const book = await db(userType).execute({
-    sql: "SELECT * FROM books WHERE id = ?",
+    sql: `SELECT * FROM ${booksTable} WHERE id = ?`,
     args: [id],
   });
 
@@ -103,8 +106,8 @@ export async function PATCH(req: Request, { params }: Params) {
         const candidates = getFlowersBySeason(season);
         const flower = await matchFlower(reviewForFlower, candidates);
         if (flower) {
-          await db().execute({
-            sql: `UPDATE books
+          await db(userType).execute({
+            sql: `UPDATE ${booksTable}
                   SET flower_name = ?, flower_meaning = ?, flower_season = ?,
                       flower_emoji = ?, flower_reason = ?
                   WHERE id = ?`,
@@ -124,7 +127,8 @@ export async function DELETE(_req: Request, { params }: Params) {
   const cookieStore = await cookies();
   const userType = getUserType(cookieStore.get(COOKIE_NAME)?.value);
   await ensureSchema(userType);
+  const booksTable = tableName(userType, "books");
   const { id } = await params;
-  await db(userType).execute({ sql: "DELETE FROM books WHERE id = ?", args: [id] });
+  await db(userType).execute({ sql: `DELETE FROM ${booksTable} WHERE id = ?`, args: [id] });
   return NextResponse.json({ ok: true });
 }

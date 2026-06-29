@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { db } from "@/lib/db";
+import { db, ensureSchema, tableName } from "@/lib/db";
 import { COOKIE_NAME, getUserType } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   const cookieStore = await cookies();
   const userType = getUserType(cookieStore.get(COOKIE_NAME)?.value);
+  await ensureSchema(userType);
+  const passagesTable = tableName(userType, "passages");
+  const booksTable = tableName(userType, "books");
+  const embeddingIdx = tableName(userType, "passages_embedding_idx");
 
   const passageIdStr = request.nextUrl.searchParams.get("passage_id");
   if (!passageIdStr) {
@@ -18,7 +22,7 @@ export async function GET(request: NextRequest) {
   }
 
   const sourceResult = await db(userType).execute({
-    sql: "SELECT book_id FROM passages WHERE id = ?",
+    sql: `SELECT book_id FROM ${passagesTable} WHERE id = ?`,
     args: [passageId],
   });
   if (sourceResult.rows.length === 0 || sourceResult.rows[0].book_id === null) {
@@ -31,10 +35,10 @@ export async function GET(request: NextRequest) {
       sql: `
         SELECT p.id, p.content, p.page, p.book_id,
                b.title AS book_title, vt.distance
-        FROM vector_top_k('passages_embedding_idx',
-               (SELECT embedding FROM passages WHERE id = ?), 6) vt
-        JOIN passages p ON p.rowid = vt.rowid
-        JOIN books b ON b.id = p.book_id
+        FROM vector_top_k('${embeddingIdx}',
+               (SELECT embedding FROM ${passagesTable} WHERE id = ?), 6) vt
+        JOIN ${passagesTable} p ON p.rowid = vt.rowid
+        JOIN ${booksTable} b ON b.id = p.book_id
         WHERE p.id != ? AND p.book_id != ?
         LIMIT 5
       `,

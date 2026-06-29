@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { db } from "@/lib/db";
+import { db, ensureSchema, tableName } from "@/lib/db";
 import { COOKIE_NAME, getUserType } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   const cookieStore = await cookies();
   const userType = getUserType(cookieStore.get(COOKIE_NAME)?.value);
+  await ensureSchema(userType);
+  const passagesTable = tableName(userType, "passages");
+  const booksTable = tableName(userType, "books");
+  const passageTagsTable = tableName(userType, "passage_tags");
+  const tagsTable = tableName(userType, "tags");
 
   const tag = request.nextUrl.searchParams.get("tag");
   if (!tag) {
@@ -16,10 +21,10 @@ export async function GET(request: NextRequest) {
     sql: `
       SELECT p.id, p.content, p.page, p.created_at,
              b.id AS book_id, b.title AS book_title, b.cover_url AS book_cover_url
-      FROM passages p
-      JOIN books b ON b.id = p.book_id
-      JOIN passage_tags pt ON pt.passage_id = p.id
-      JOIN tags t ON t.id = pt.tag_id
+      FROM ${passagesTable} p
+      JOIN ${booksTable} b ON b.id = p.book_id
+      JOIN ${passageTagsTable} pt ON pt.passage_id = p.id
+      JOIN ${tagsTable} t ON t.id = pt.tag_id
       WHERE t.name = ?
       ORDER BY p.created_at DESC
     `,
