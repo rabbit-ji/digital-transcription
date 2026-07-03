@@ -27,15 +27,6 @@ interface Passage {
   created_at: string;
 }
 
-interface SimilarPassage {
-  id: number;
-  content: string;
-  page: number | null;
-  book_id: number;
-  book_title: string;
-  distance: number;
-}
-
 export default function BookDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
@@ -48,10 +39,6 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
   const [passageContent, setPassageContent] = useState("");
   const [passagePage, setPassagePage] = useState("");
   const [addingPassage, setAddingPassage] = useState(false);
-
-  const [expandedSimilarId, setExpandedSimilarId] = useState<number | null>(null);
-  const [similarPassages, setSimilarPassages] = useState<Record<number, SimilarPassage[]>>({});
-  const [loadingSimilarId, setLoadingSimilarId] = useState<number | null>(null);
 
   useEffect(() => {
     fetch(`/api/books/${id}`)
@@ -91,23 +78,6 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
   async function deletePassage(passageId: number) {
     await fetch(`/api/passages/${passageId}`, { method: "DELETE" });
     setPassages((prev) => prev.filter((p) => p.id !== passageId));
-  }
-
-  async function toggleSimilar(passageId: number) {
-    if (expandedSimilarId === passageId) {
-      setExpandedSimilarId(null);
-      return;
-    }
-    setExpandedSimilarId(passageId);
-    if (similarPassages[passageId]) return;
-    setLoadingSimilarId(passageId);
-    try {
-      const res = await fetch(`/api/passages/similar?passage_id=${passageId}`);
-      const data = await res.json();
-      setSimilarPassages((prev) => ({ ...prev, [passageId]: data.similar ?? [] }));
-    } finally {
-      setLoadingSimilarId(null);
-    }
   }
 
   if (loading) return <div className="max-w-2xl mx-auto p-4 sm:p-6 text-stone-400">불러오는 중…</div>;
@@ -192,34 +162,6 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
                 >
                   삭제
                 </button>
-                <button
-                  onClick={() => toggleSimilar(p.id)}
-                  className="mt-3 text-xs text-stone-400 hover:text-stone-600 transition-colors"
-                >
-                  {expandedSimilarId === p.id ? "▲ 닫기" : "✦ 연결된 구절"}
-                </button>
-                {expandedSimilarId === p.id && (
-                  <div className="mt-3 pt-3 border-t border-stone-100">
-                    {loadingSimilarId === p.id ? (
-                      <p className="text-xs text-stone-400">찾는 중…</p>
-                    ) : (similarPassages[p.id]?.length ?? 0) === 0 ? (
-                      <p className="text-xs text-stone-400">연결된 구절이 없어요.</p>
-                    ) : (
-                      <div className="space-y-2">
-                        {similarPassages[p.id].map((s) => (
-                          <Link
-                            key={s.id}
-                            href={`/books/${s.book_id}`}
-                            className="block bg-stone-50 rounded-xl p-3 hover:bg-stone-100 transition-colors"
-                          >
-                            <p className="text-xs text-stone-600 leading-relaxed line-clamp-2">{s.content}</p>
-                            <p className="text-xs text-stone-400 mt-1">{s.book_title}{s.page ? ` · p.${s.page}` : ""}</p>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             ))}
           </div>

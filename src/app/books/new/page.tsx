@@ -136,9 +136,12 @@ export default function NewBookPage() {
             recorded_at: recordedAt || null,
           }),
         });
+        const patchData = await patchRes.json();
         if (!patchRes.ok) {
-          const d = await patchRes.json();
-          throw new Error(d.error ?? "저장 실패");
+          throw new Error(patchData.error ?? "저장 실패");
+        }
+        if (patchData.flowerQuotaExceeded) {
+          alert("오늘의 AI 꽃 매칭 한도를 모두 사용해서 꽃을 배정하지 못했어요.\n내일 다시 시도하거나, 정원에서 '꽃 동기화'를 눌러 나중에 매칭할 수 있어요.");
         }
       }
 

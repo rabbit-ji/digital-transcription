@@ -1,17 +1,13 @@
-import { NextResponse, after } from "next/server";
+import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { db, ensureSchema, nowIso, tableName } from "@/lib/db";
 import { COOKIE_NAME, getUserType } from "@/lib/auth";
-import { embedPassage, extractTags } from "@/lib/gemini";
 
 export async function POST(req: Request) {
   const cookieStore = await cookies();
-  // after() 클로저 안에서도 쓸 수 있도록 미리 캡처
   const userType = getUserType(cookieStore.get(COOKIE_NAME)?.value);
   await ensureSchema(userType);
   const passagesTable = tableName(userType, "passages");
-  const tagsTable = tableName(userType, "tags");
-  const passageTagsTable = tableName(userType, "passage_tags");
   const body = await req.json().catch(() => ({}));
   const { book_id, content, page } = body;
   if (!book_id || !content?.trim()) {
@@ -20,7 +16,8 @@ export async function POST(req: Request) {
   const now = nowIso();
   const trimmed = content.trim();
 
-  // DB에 먼저 저장 (임베딩 없이)
+  // 필사는 즉시 저장한다. 태그 추출은 AI 호출 비용이 있어 여기서 하지 않고,
+  // 인용 사전(dictionary) 진입 시 미처리분만 한 번씩 추출한다(tags_extracted 플래그로 캐시).
   const result = await db(userType).execute({
     sql: `INSERT INTO ${passagesTable} (book_id, content, page, created_at) VALUES (?, ?, ?, ?)`,
     args: [book_id, trimmed, page ?? null, now],
@@ -30,44 +27,6 @@ export async function POST(req: Request) {
   const passage = await db(userType).execute({
     sql: `SELECT id, content, page, created_at FROM ${passagesTable} WHERE id = ?`,
     args: [passageId],
-  });
-
-  // 임베딩 + 태그 추출은 응답 후 백그라운드에서 처리
-  after(async () => {
-    try {
-      const [vec, tags] = await Promise.all([
-        embedPassage(trimmed),
-        extractTags(trimmed),
-      ]);
-
-      if (vec.length === 768) {
-        await db(userType).execute({
-          sql: `UPDATE ${passagesTable} SET embedding = vector(?) WHERE id = ?`,
-          args: [`[${vec.join(",")}]`, passageId],
-        });
-      }
-
-      for (const tag of tags) {
-        const tagName = tag.trim();
-        if (!tagName) continue;
-        await db(userType).execute({
-          sql: `INSERT OR IGNORE INTO ${tagsTable} (name) VALUES (?)`,
-          args: [tagName],
-        });
-        const tagRow = await db(userType).execute({
-          sql: `SELECT id FROM ${tagsTable} WHERE name = ?`,
-          args: [tagName],
-        });
-        if (tagRow.rows[0]) {
-          await db(userType).execute({
-            sql: `INSERT OR IGNORE INTO ${passageTagsTable} (passage_id, tag_id) VALUES (?, ?)`,
-            args: [passageId, tagRow.rows[0].id],
-          });
-        }
-      }
-    } catch {
-      // 임베딩/태그 실패해도 필사는 이미 저장됨
-    }
   });
 
   return NextResponse.json({ passage: passage.rows[0], tags: [] }, { status: 201 });

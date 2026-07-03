@@ -68,10 +68,12 @@ async function initSchema(userType: "admin" | "guest"): Promise<void> {
   await client.executeMultiple(applyPrefix(raw, prefix));
   // 기존 DB에 신규 컬럼 마이그레이션 (이미 존재하면 무시)
   const booksTable = `${prefix}books`;
+  const passagesTable = `${prefix}passages`;
   const migrations = [
     `ALTER TABLE ${booksTable} ADD COLUMN first_sentence TEXT`,
     `ALTER TABLE ${booksTable} ADD COLUMN last_sentence TEXT`,
     `ALTER TABLE ${booksTable} ADD COLUMN visitor_name TEXT`,
+    `ALTER TABLE ${passagesTable} ADD COLUMN tags_extracted INTEGER DEFAULT 0`,
   ];
   for (const stmt of migrations) {
     try { await client.execute(stmt); } catch { /* column already exists */ }

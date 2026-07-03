@@ -1,9 +1,9 @@
-import { NextResponse, after } from "next/server";
+import { NextResponse } from "next/server";
 import type { InValue } from "@libsql/client";
 import { cookies } from "next/headers";
 import { db, ensureSchema, nowIso, tableName } from "@/lib/db";
 import { COOKIE_NAME, getUserType } from "@/lib/auth";
-import { matchFlower } from "@/lib/gemini";
+import { matchFlower, QuotaExceededError } from "@/lib/gemini";
 import { getSeason, getFlowersBySeason } from "@/lib/flowers";
 
 type Params = { params: Promise<{ id: string }> };
@@ -91,36 +91,40 @@ export async function PATCH(req: Request, { params }: Params) {
     sql: `UPDATE ${booksTable} SET ${updates.join(", ")} WHERE id = ?`,
     args,
   });
+
+  // 꽃 매칭은 동기로 수행해 결과(성공/한도 초과)를 사용자에게 바로 알린다.
+  // 한도 초과 시 꽃은 비워두고 flowerQuotaExceeded로 안내한다(정원 동기화로 재시도 가능).
+  let flowerQuotaExceeded = false;
+  if (pendingFlowerReview) {
+    const reviewForFlower = pendingFlowerReview;
+    const dateForFlower = pendingFlowerDate ?? new Date().toISOString();
+    try {
+      const season = getSeason(dateForFlower);
+      const candidates = getFlowersBySeason(season);
+      const flower = await matchFlower(reviewForFlower, candidates);
+      if (flower) {
+        await db(userType).execute({
+          sql: `UPDATE ${booksTable}
+                SET flower_name = ?, flower_meaning = ?, flower_season = ?,
+                    flower_emoji = ?, flower_reason = ?
+                WHERE id = ?`,
+          args: [flower.name, flower.meaning, flower.season, flower.emoji, flower.reason, id],
+        });
+      }
+    } catch (e) {
+      if (e instanceof QuotaExceededError) {
+        flowerQuotaExceeded = true;
+      }
+      // 그 외 오류는 꽃만 비운 채 저장은 유지(정원 동기화 버튼으로 재시도 가능)
+    }
+  }
+
   const book = await db(userType).execute({
     sql: `SELECT * FROM ${booksTable} WHERE id = ?`,
     args: [id],
   });
 
-  // 꽃 매칭은 응답 후 백그라운드에서 수행 (필사 임베딩과 동일한 패턴)
-  if (pendingFlowerReview) {
-    const reviewForFlower = pendingFlowerReview;
-    const dateForFlower = pendingFlowerDate ?? new Date().toISOString();
-    after(async () => {
-      try {
-        const season = getSeason(dateForFlower);
-        const candidates = getFlowersBySeason(season);
-        const flower = await matchFlower(reviewForFlower, candidates);
-        if (flower) {
-          await db(userType).execute({
-            sql: `UPDATE ${booksTable}
-                  SET flower_name = ?, flower_meaning = ?, flower_season = ?,
-                      flower_emoji = ?, flower_reason = ?
-                  WHERE id = ?`,
-            args: [flower.name, flower.meaning, flower.season, flower.emoji, flower.reason, id],
-          });
-        }
-      } catch {
-        // 꽃 매칭 실패 — 정원 동기화 버튼으로 재시도 가능
-      }
-    });
-  }
-
-  return NextResponse.json({ book: book.rows[0] });
+  return NextResponse.json({ book: book.rows[0], flowerQuotaExceeded });
 }
 
 export async function DELETE(_req: Request, { params }: Params) {

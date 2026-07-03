@@ -81,6 +81,9 @@ export default function BookEditPage({ params }: { params: Promise<{ id: string 
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "저장 실패");
+      if (data.flowerQuotaExceeded) {
+        alert("오늘의 AI 꽃 매칭 한도를 모두 사용해서 꽃을 배정하지 못했어요.\n내일 다시 시도하거나, 정원에서 '꽃 동기화'를 눌러 나중에 매칭할 수 있어요.");
+      }
       router.push(`/books/${id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "저장 중 오류가 발생했어요");

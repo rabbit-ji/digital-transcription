@@ -25,10 +25,11 @@ CREATE TABLE IF NOT EXISTS books (
 CREATE TABLE IF NOT EXISTS passages (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   book_id     INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
-  content     TEXT NOT NULL,
-  page        INTEGER,
-  embedding   F32_BLOB(768),           -- Gemini 임베딩(출력 차원 768)
-  created_at  TEXT NOT NULL
+  content        TEXT NOT NULL,
+  page           INTEGER,
+  embedding      F32_BLOB(768),        -- (미사용) 과거 유사 필사 검색용
+  tags_extracted INTEGER DEFAULT 0,    -- 태그 추출 시도 완료 여부(1=완료, 재추출 안 함)
+  created_at     TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS tags (

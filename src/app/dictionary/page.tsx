@@ -34,9 +34,18 @@ function DictionaryContent() {
   const [tagsExpanded, setTagsExpanded] = useState(false);
 
   useEffect(() => {
-    fetch("/api/tags")
-      .then((r) => r.json())
-      .then((d) => setTags(d.tags ?? []));
+    // 진입 시 아직 태그가 없는 필사만 한 번씩 추출(이미 처리한 건 캐시되어 건너뜀)한 뒤
+    // 태그 목록을 불러온다. 추출이 실패하거나 한도에 걸려도 기존 태그는 그대로 보여준다.
+    (async () => {
+      try {
+        await fetch("/api/tags/extract", { method: "POST" });
+      } catch {
+        // 무시: 기존 태그만 표시
+      }
+      const r = await fetch("/api/tags");
+      const d = await r.json();
+      setTags(d.tags ?? []);
+    })();
   }, []);
 
   const filteredTags = tags.filter((t) => t.count > 0);
