@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       JOIN ${passageTagsTable} pt ON pt.passage_id = p.id
       JOIN ${tagsTable} t ON t.id = pt.tag_id
       WHERE t.name = ?
-      ORDER BY p.created_at DESC
+      ORDER BY p.created_at DESC, p.id DESC
     `,
     args: [tag],
   });
