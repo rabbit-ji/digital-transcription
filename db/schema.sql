@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS passages (
   book_id     INTEGER NOT NULL REFERENCES books(id) ON DELETE CASCADE,
   content        TEXT NOT NULL,
   page           INTEGER,
+  position       INTEGER,              -- 필사 표시 순서(수동 재정렬 시 지정, NULL이면 id 순)
   embedding      F32_BLOB(768),        -- (미사용) 과거 유사 필사 검색용
   tags_extracted INTEGER DEFAULT 0,    -- 태그 추출 시도 완료 여부(1=완료, 재추출 안 함)
   created_at     TEXT NOT NULL

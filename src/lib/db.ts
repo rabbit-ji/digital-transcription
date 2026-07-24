@@ -74,6 +74,7 @@ async function initSchema(userType: "admin" | "guest"): Promise<void> {
     `ALTER TABLE ${booksTable} ADD COLUMN last_sentence TEXT`,
     `ALTER TABLE ${booksTable} ADD COLUMN visitor_name TEXT`,
     `ALTER TABLE ${passagesTable} ADD COLUMN tags_extracted INTEGER DEFAULT 0`,
+    `ALTER TABLE ${passagesTable} ADD COLUMN position INTEGER`,
   ];
   for (const stmt of migrations) {
     try { await client.execute(stmt); } catch { /* column already exists */ }
