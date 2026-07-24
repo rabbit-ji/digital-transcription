@@ -109,20 +109,19 @@ export default function NewBookPage() {
       if (!bookRes.ok) throw new Error(bookData.error ?? "추가 실패");
       const bookId = bookData.book.id;
 
-      if (passages.length > 0) {
-        await Promise.all(
-          passages.map((p) =>
-            fetch("/api/passages", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                book_id: bookId,
-                content: p.content,
-                page: p.page ? Number(p.page) : undefined,
-              }),
-            })
-          )
-        );
+      // 필사는 입력한 순서 그대로 저장돼야 하므로 반드시 하나씩 순차로 보낸다.
+      // Promise.all로 병렬 전송하면 서버 도착 순서대로 id가 매겨져(=순서 뒤섞임)
+      // 나중에 저장 순서로 정렬해도 뒤죽박죽이 된다.
+      for (const p of passages) {
+        await fetch("/api/passages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            book_id: bookId,
+            content: p.content,
+            page: p.page ? Number(p.page) : undefined,
+          }),
+        });
       }
 
       if (review.trim() || firstSentence.trim() || lastSentence.trim() || recordedAt) {
