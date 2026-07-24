@@ -38,6 +38,7 @@ export default function BookEditPage({ params }: { params: Promise<{ id: string 
   const [passageContent, setPassageContent] = useState("");
   const [passagePage, setPassagePage] = useState("");
   const [addingPassage, setAddingPassage] = useState(false);
+  const [reordering, setReordering] = useState(false);
 
   useEffect(() => {
     fetch("/api/user")
@@ -117,6 +118,32 @@ export default function BookEditPage({ params }: { params: Promise<{ id: string 
   async function deletePassage(passageId: number) {
     await fetch(`/api/passages/${passageId}`, { method: "DELETE" });
     setPassages((prev) => prev.filter((p) => p.id !== passageId));
+  }
+
+  // 필사를 위/아래로 한 칸 이동하고 바뀐 순서를 즉시 저장한다.
+  // 저장에 실패하면 원래 순서로 되돌린다.
+  async function movePassage(index: number, direction: -1 | 1) {
+    const target = index + direction;
+    if (target < 0 || target >= passages.length) return;
+    const previous = passages;
+    const next = [...passages];
+    [next[index], next[target]] = [next[target], next[index]];
+    setPassages(next);
+    setReordering(true);
+    setError("");
+    try {
+      const res = await fetch("/api/passages/reorder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ book_id: id, ordered_ids: next.map((p) => p.id) }),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      setPassages(previous);
+      setError("순서 저장에 실패했어요. 다시 시도해주세요.");
+    } finally {
+      setReordering(false);
+    }
   }
 
   async function deleteBook() {
@@ -210,16 +237,38 @@ export default function BookEditPage({ params }: { params: Promise<{ id: string 
         <div className="mt-8 lg:mt-0 space-y-6">
           <div className="space-y-3">
             <h2 className="text-sm font-medium text-stone-600">✍️ 필사 ({passages.length})</h2>
+            {passages.length > 1 && (
+              <p className="text-xs text-stone-400">↑↓ 버튼으로 순서를 바꿀 수 있어요. 바꾸면 바로 저장돼요.</p>
+            )}
 
             {passages.length > 0 && (
               <div className="space-y-2">
-                {passages.map((p) => (
+                {passages.map((p, i) => (
                   <div key={p.id} className="bg-stone-50 rounded-xl border border-stone-100 p-3 relative group">
                     <p className="text-stone-700 text-sm leading-relaxed whitespace-pre-wrap pr-8">{p.content}</p>
                     {p.page && <p className="text-xs text-stone-400 mt-1">p. {p.page}</p>}
+                    <div className="flex items-center gap-1 mt-2">
+                      <button
+                        onClick={() => movePassage(i, -1)}
+                        disabled={i === 0 || reordering}
+                        aria-label="위로 이동"
+                        className="w-6 h-6 flex items-center justify-center text-stone-500 border border-stone-200 rounded hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        onClick={() => movePassage(i, 1)}
+                        disabled={i === passages.length - 1 || reordering}
+                        aria-label="아래로 이동"
+                        className="w-6 h-6 flex items-center justify-center text-stone-500 border border-stone-200 rounded hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      >
+                        ↓
+                      </button>
+                      <span className="text-[11px] text-stone-300 ml-1">{i + 1}</span>
+                    </div>
                     <button
                       onClick={() => deletePassage(p.id)}
-                      className="absolute top-3 right-3 text-xs text-stone-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-3 right-3 text-xs text-stone-400 hover:text-red-400 transition-colors"
                     >
                       삭제
                     </button>
