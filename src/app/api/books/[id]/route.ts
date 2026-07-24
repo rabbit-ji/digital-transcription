@@ -22,8 +22,11 @@ export async function GET(_req: Request, { params }: Params) {
   if (!book.rows[0]) {
     return NextResponse.json({ error: "책을 찾을 수 없습니다" }, { status: 404 });
   }
+  // 필사는 저장한 순서(=삽입 순서)대로 보여준다.
+  // created_at은 밀리초 단위라 빠르게 연속 저장하면 값이 겹쳐(동률) 정렬 순서가
+  // 뒤죽박죽 섞일 수 있다. id는 AUTOINCREMENT라 저장 순서를 항상 정확히 보존한다.
   const passages = await db(userType).execute({
-    sql: `SELECT id, content, page, created_at FROM ${passagesTable} WHERE book_id = ? ORDER BY created_at ASC`,
+    sql: `SELECT id, content, page, created_at FROM ${passagesTable} WHERE book_id = ? ORDER BY id ASC`,
     args: [id],
   });
   return NextResponse.json({ book: book.rows[0], passages: passages.rows });

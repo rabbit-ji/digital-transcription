@@ -22,7 +22,7 @@ export async function POST() {
     `SELECT id, content FROM ${passagesTable}
      WHERE (tags_extracted IS NULL OR tags_extracted = 0)
        AND content IS NOT NULL AND TRIM(content) <> ''
-     ORDER BY created_at ASC`
+     ORDER BY created_at ASC, id ASC`
   );
 
   // 미처리 필사가 없으면 Gemini 토큰을 전혀 쓰지 않는다
