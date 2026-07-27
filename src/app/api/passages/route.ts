@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   const passageId = Number(result.lastInsertRowid);
 
   const passage = await db(userType).execute({
-    sql: `SELECT id, content, page, created_at FROM ${passagesTable} WHERE id = ?`,
+    sql: `SELECT id, content, page, position, created_at FROM ${passagesTable} WHERE id = ?`,
     args: [passageId],
   });
 

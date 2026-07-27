@@ -22,12 +22,16 @@ export async function GET(_req: Request, { params }: Params) {
   if (!book.rows[0]) {
     return NextResponse.json({ error: "책을 찾을 수 없습니다" }, { status: 404 });
   }
-  // 필사 순서: 수동으로 재정렬했으면 position, 아니면 저장(삽입) 순서인 id.
+  // 필사 순서 규칙(우선순위):
+  //   1) page 있는 필사가 먼저(오름차순) — 책은 페이지 순으로 읽으므로 필사도 페이지 순이 자연스럽다.
+  //   2) page가 같거나(같은 페이지 여러 필사) page가 없으면 → 수동 재정렬 position, 없으면 저장 순서 id.
+  //   3) page 없는 필사는 뒤쪽에 저장(삽입) 순서대로.
   // id는 AUTOINCREMENT라 저장 순서를 정확히 보존한다(created_at은 밀리초라 동률 가능).
-  // position이 지정된 책은 사용자가 지정한 순서대로, 아직 재정렬 안 한 책은 id 순.
+  // 이 정렬은 src/lib/passages.ts의 sortPassages()와 동일 규칙이다(수정 시 함께 맞출 것).
   const passages = await db(userType).execute({
     sql: `SELECT id, content, page, position, created_at FROM ${passagesTable}
-          WHERE book_id = ? ORDER BY COALESCE(position, id) ASC, id ASC`,
+          WHERE book_id = ?
+          ORDER BY (page IS NULL) ASC, page ASC, COALESCE(position, id) ASC, id ASC`,
     args: [id],
   });
   return NextResponse.json({ book: book.rows[0], passages: passages.rows });

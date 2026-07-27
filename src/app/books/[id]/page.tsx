@@ -2,6 +2,7 @@
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { sortPassages } from "@/lib/passages";
 
 interface Book {
   id: number;
@@ -24,6 +25,7 @@ interface Passage {
   id: number;
   content: string;
   page: number | null;
+  position: number | null;
   created_at: string;
 }
 
@@ -67,7 +69,8 @@ export default function BookDetailPage({ params }: { params: Promise<{ id: strin
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setPassages((prev) => [...prev, data.passage as Passage]);
+      // page가 있으면 페이지순으로, 없으면 저장 순서상 맨 뒤로 — 서버 정렬 규칙과 동일하게 반영
+      setPassages((prev) => sortPassages([...prev, data.passage as Passage]));
       setPassageContent("");
       setPassagePage("");
     } finally {
